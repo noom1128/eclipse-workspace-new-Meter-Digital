@@ -1,0 +1,4 @@
+$kind: collection
+variables:
+  baseUrl: http://localhost:8080
+  adminToken: ""

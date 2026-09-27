@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/meter"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "roomNumber": "103",
+      "meterId": "METER-103",
+      "unit": 1530.10,
+      "voltage": 229.1,
+      "current": 1.74,
+      "power": 379.0
+    }
+order: 3000

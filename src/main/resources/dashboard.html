@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Meter Energy Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #090c10;
+            --bg-card: rgba(22, 27, 38, 0.75);
+            --bg-card-hover: rgba(30, 38, 54, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(168, 85, 247, 0.3);
+            
+            --purple-main: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.4);
+            --magenta-main: #ec4899;
+            --cyan-main: #06b6d4;
+            --blue-main: #3b82f6;
+            --green-main: #10b981;
+            --orange-main: #f59e0b;
+            
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Kanit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--purple-main), var(--magenta-main));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            color: #fff;
+            box-shadow: 0 0 15px var(--purple-glow);
+        }
+
+        .brand-title h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #d1d5db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--green-main);
+            font-weight: 500;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--green-main);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green-main);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .select-filter, .btn-refresh {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .select-filter:hover, .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Dashboard Main Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Left Side Cards */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Building Card */
+        .building-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .building-container {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .building-svg {
+            width: 160px;
+            height: 180px;
+            filter: drop-shadow(0 15px 25px rgba(168, 85, 247, 0.25));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .building-info {
+            width: 100%;
+            margin-top: 10px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        /* Gauge Card */
+        .gauge-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 140px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .gauge-center-text {
+            position: absolute;
+            bottom: 15px;
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        .gauge-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Right Column */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Top 4 Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(145px, 1fr));
+            gap: 12px;
+        }
+
+        .room-meter-card {
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid var(--border-color);
+        }
+
+        .room-meter-card h3 { font-size: 15px; color: var(--cyan-main); margin-bottom: 7px; }
+        .room-meter-card .room-unit { font-size: 21px; font-weight: 700; }
+        .room-meter-card .room-meta { font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.55; }
+
+        @media (max-width: 900px) {
+            .room-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-color, var(--purple-main));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color, #fff);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .stat-unit {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Charts Layout */
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-card {
+            min-height: 220px;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 180px;
+            position: relative;
+        }
+
+        /* Alerts & Log Table Card */
+        .table-card {
+            overflow: hidden;
+        }
+
+        .meter-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .meter-table th {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .meter-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .meter-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-normal {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green-main);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--orange-main);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Bar -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo">ND</div>
+            <div class="brand-title">
+                <h1>METER DIGITAL MONITORING</h1>
+                <p>Real-Time Smart Energy Analytics & Building System</p>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <div class="status-badge">
+                <div class="pulse-dot"></div>
+                <span id="connection-status">LIVE CONNECTED</span>
+            </div>
+
+            <div id="user-badge" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--purple-main); background: rgba(168,85,247,0.1); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(168,85,247,0.3);">
+                <i class="fas fa-user-circle"></i> <span id="user-display">Admin</span>
+            </div>
+
+            <select class="select-filter" id="time-filter">
+                <option value="15m"><i class="far fa-clock"></i> Last 15 minutes</option>
+                <option value="1h">Last 1 hour</option>
+                <option value="today">Today</option>
+            </select>
+
+            <button class="btn-refresh" id="refresh-btn" onclick="fetchLiveData()">
+                <i class="fas fa-sync-alt"></i> Refresh <span id="timer-sec">5s</span>
+            </button>
+
+            <button class="btn-refresh" onclick="location.href='/billing'" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #6ee7b7;">
+                <i class="fas fa-file-invoice-dollar"></i> Billing
+            </button>
+
+            <button class="btn-refresh" onclick="handleLogout()" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #f87171;">
+                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="dashboard-grid">
+        
+        <!-- Left Side Column -->
+        <div class="left-column">
+            
+            <!-- 3D Building Card -->
+            <div class="card building-card">
+                <div class="card-header" style="width: 100%;">
+                    <div class="card-title"><i class="fas fa-building" style="color: var(--purple-main);"></i> Smart Building</div>
+                    <span style="font-size: 11px; color: var(--green-main);"><i class="fas fa-circle" style="font-size: 8px;"></i> Active</span>
+                </div>
+
+                <div class="building-container">
+                    <svg class="building-svg" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Isometric Building 3D Base -->
+                        <path d="M100 20 L170 55 L100 90 L30 55 Z" fill="url(#roof-grad)" stroke="rgba(255,255,255,0.2)"/>
+                        <path d="M30 55 L100 90 L100 190 L30 155 Z" fill="url(#left-wall)" stroke="rgba(255,255,255,0.1)"/>
+                        <path d="M100 90 L170 55 L170 155 L100 190 Z" fill="url(#right-wall)" stroke="rgba(255,255,255,0.1)"/>
+                        
+                        <!-- ND Logo Circle Badge on Roof -->
+                        <circle cx="100" cy="55" r="22" fill="#eab308" stroke="#ffffff" stroke-width="2" filter="url(#glow)"/>
+                        <text x="100" y="61" font-family="Inter" font-weight="900" font-size="14" fill="#000" text-anchor="middle">ND</text>
+                        
+                        <!-- Windows Glowing -->
+                        <!-- Left Wall Windows -->
+                        <rect x="45" y="85" width="18" height="12" rx="2" fill="#a855f7" opacity="0.8"/>
+                        <rect x="70" y="98" width="18" height="12" rx="2" fill="#06b6d4" opacity="0.8"/>
+                        <rect x="45" y="110" width="18" height="12" rx="2" fill="#06b6d4" opacity="0.8"/>
+                        <rect x="70" y="122" width="18" height="12" rx="2" fill="#a855f7" opacity="0.8"/>
+                        <rect x="45" y="135" width="18" height="12" rx="2" fill="#a855f7" opacity="0.8"/>
+                        
+                        <!-- Right Wall Windows -->
+                        <rect x="112" y="98" width="18" height="12" rx="2" fill="#06b6d4" opacity="0.8"/>
+                        <rect x="137" y="85" width="18" height="12" rx="2" fill="#a855f7" opacity="0.8"/>
+                        <rect x="112" y="122" width="18" height="12" rx="2" fill="#a855f7" opacity="0.8"/>
+                        <rect x="137" y="110" width="18" height="12" rx="2" fill="#06b6d4" opacity="0.8"/>
+                        <rect x="112" y="145" width="18" height="12" rx="2" fill="#06b6d4" opacity="0.8"/>
+
+                        <!-- Gradients & Filters -->
+                        <defs>
+                            <linearGradient id="roof-grad" x1="30" y1="20" x2="170" y2="90">
+                                <stop offset="0%" stop-color="#2e374a"/>
+                                <stop offset="100%" stop-color="#1a202c"/>
+                            </linearGradient>
+                            <linearGradient id="left-wall" x1="30" y1="55" x2="100" y2="190">
+                                <stop offset="0%" stop-color="#1e2638"/>
+                                <stop offset="100%" stop-color="#0f141d"/>
+                            </linearGradient>
+                            <linearGradient id="right-wall" x1="100" y1="90" x2="170" y2="155">
+                                <stop offset="0%" stop-color="#2d374d"/>
+                                <stop offset="100%" stop-color="#151b26"/>
+                            </linearGradient>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div class="building-info">
+                    <span><i class="fas fa-layer-group"></i> Floors: 5</span>
+                    <span><i class="fas fa-plug"></i> Main Transformer: OK</span>
+                </div>
+            </div>
+
+            <!-- Power Factor Gauge Card -->
+            <div class="card gauge-card">
+                <div class="card-header" style="width: 100%;">
+                    <div class="card-title"><i class="fas fa-tachometer-alt" style="color: var(--magenta-main);"></i> Power Factor</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">Real-Time</span>
+                </div>
+
+                <div class="gauge-container">
+                    <canvas id="pfGaugeChart"></canvas>
+                    <div class="gauge-center-text">
+                        <div class="gauge-value" id="pf-val">0.950</div>
+                        <div class="gauge-label">Power Factor</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Side Column -->
+        <div class="right-column">
+            
+            <!-- 4 Stat Cards Row -->
+            <div class="stats-grid">
+                
+                <!-- Kilowatt-hour Card -->
+                <div class="stat-card" style="--accent-color: var(--purple-main);">
+                    <div class="stat-label">Kilowatt-hour</div>
+                    <div class="stat-subtext">Office Main</div>
+                    <div class="stat-value">
+                        <span id="stat-kwh">35.9</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                </div>
+
+                <!-- Carbon Footprint Card -->
+                <div class="stat-card" style="--accent-color: var(--magenta-main);">
+                    <div class="stat-label">Carbon Footprint</div>
+                    <div class="stat-subtext">Office Main</div>
+                    <div class="stat-value">
+                        <span id="stat-co2">21.5</span>
+                        <span class="stat-unit">kgCO2e</span>
+                    </div>
+                </div>
+
+                <!-- Temperature Card -->
+                <div class="stat-card" style="--accent-color: var(--cyan-main);">
+                    <div class="stat-label">Temperature</div>
+                    <div class="stat-subtext">Office Zone</div>
+                    <div class="stat-value">
+                        <span id="stat-temp">23.4</span>
+                        <span class="stat-unit">°C</span>
+                    </div>
+                </div>
+
+                <!-- Humidity Card -->
+                <div class="stat-card" style="--accent-color: var(--blue-main);">
+                    <div class="stat-label">Humidity</div>
+                    <div class="stat-subtext">Office Zone</div>
+                    <div class="stat-value">
+                        <span id="stat-humidity">61.1</span>
+                        <span class="stat-unit">%RH</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card" id="admin-room-panel">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-door-open" style="color: var(--cyan-main);"></i> ค่ามิเตอร์ล่าสุดแยกตามห้อง</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">Admin only · 5 ห้อง</span>
+                </div>
+                <div id="room-meter-grid" class="room-grid">
+                    <span style="color: var(--text-muted);">กำลังโหลดข้อมูลห้อง...</span>
+                </div>
+            </div>
+
+            <!-- Real-Time Line Charts Container -->
+            <div class="charts-container">
+                
+                <!-- Voltage Chart -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-bolt" style="color: var(--purple-main);"></i> Voltage (V)</div>
+                        <span style="font-size: 12px; color: var(--purple-main); font-weight: 600;" id="voltage-live">220.5 V</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="voltageChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Current Chart -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-wave-square" style="color: var(--magenta-main);"></i> Current (A)</div>
+                        <span style="font-size: 12px; color: var(--magenta-main); font-weight: 600;" id="current-live">1.25 A</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="currentChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Live Readings Table -->
+            <div class="card table-card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list-alt" style="color: var(--cyan-main);"></i> Meter Reading Logs (/api/meter)</div>
+                    <span style="font-size: 11px; color: var(--text-muted);">Auto Updated</span>
+                </div>
+                <table class="meter-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Meter ID</th>
+                            <th>Voltage (V)</th>
+                            <th>Current (A)</th>
+                            <th>Power (W)</th>
+                            <th>Energy (kWh)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-muted);">Loading data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Dashboard JavaScript Logic -->
+    <script>
+        // API Base URL (Relative for Spring Boot)
+        const API_BASE = '/api/meter';
+
+        function authHeaders() {
+            const token = localStorage.getItem('jwtToken');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        // Chart Instances
+        let voltageChart, currentChart, pfGaugeChart;
+
+        // Data arrays for time-series charts
+        const maxDataPoints = 15;
+        const timeLabels = [];
+        const voltageData = [];
+        const currentData = [];
+
+        // Initialize Charts
+        function initCharts() {
+            // 1. Voltage Chart
+            const ctxV = document.getElementById('voltageChart').getContext('2d');
+            const gradV = ctxV.createLinearGradient(0, 0, 0, 180);
+            gradV.addColorStop(0, 'rgba(168, 85, 247, 0.4)');
+            gradV.addColorStop(1, 'rgba(168, 85, 247, 0.0)');
+
+            voltageChart = new Chart(ctxV, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Voltage (V)',
+                        data: voltageData,
+                        borderColor: '#a855f7',
+                        borderWidth: 2,
+                        backgroundColor: gradV,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#a855f7'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } }, min: 200, max: 240 }
+                    }
+                }
+            });
+
+            // 2. Current Chart
+            const ctxI = document.getElementById('currentChart').getContext('2d');
+            const gradI = ctxI.createLinearGradient(0, 0, 0, 180);
+            gradI.addColorStop(0, 'rgba(236, 72, 153, 0.4)');
+            gradI.addColorStop(1, 'rgba(236, 72, 153, 0.0)');
+
+            currentChart = new Chart(ctxI, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Current (A)',
+                        data: currentData,
+                        borderColor: '#ec4899',
+                        borderWidth: 2,
+                        backgroundColor: gradI,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ec4899'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } }, min: 0, max: 5 }
+                    }
+                }
+            });
+
+            // 3. Power Factor Semi-Doughnut Gauge
+            const ctxPF = document.getElementById('pfGaugeChart').getContext('2d');
+            pfGaugeChart = new Chart(ctxPF, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [0.95, 0.05],
+                        backgroundColor: ['#ec4899', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%',
+                    plugins: { tooltip: { enabled: false } }
+                }
+            });
+        }
+
+        // Fetch Data from Spring Boot Web Service
+        async function fetchLiveData() {
+            try {
+                const res = await fetch(`${API_BASE}/latest`, { headers: authHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data) {
+                        updateDashboardWithData(data);
+                        document.getElementById('connection-status').innerText = 'LIVE CONNECTED';
+                    }
+                } else {
+                    // Fallback simulated live update if DB is empty yet
+                    useSimulatedData();
+                }
+            } catch (err) {
+                console.log("Web Service offline/connecting...", err);
+                useSimulatedData();
+            }
+
+            // Fetch table list
+            fetchTableLogs();
+            fetchRoomSummary();
+        }
+
+        async function fetchTableLogs() {
+            try {
+                const res = await fetch(API_BASE, { headers: authHeaders() });
+                if (res.ok) {
+                    const list = await res.json();
+                    renderTable(list);
+                }
+            } catch (err) {}
+        }
+
+        async function fetchRoomSummary() {
+            const panel = document.getElementById('admin-room-panel');
+            if (localStorage.getItem('userRole') !== 'ROLE_ADMIN') {
+                panel.style.display = 'none';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/latest-by-room`, { headers: authHeaders() });
+                if (!res.ok) throw new Error('Cannot load room readings');
+                renderRoomSummary(await res.json());
+            } catch (err) {
+                document.getElementById('room-meter-grid').innerHTML =
+                    '<span style="color: #f87171;">ไม่สามารถโหลดค่ามิเตอร์แยกห้องได้</span>';
+            }
+        }
+
+        function renderRoomSummary(rooms) {
+            const grid = document.getElementById('room-meter-grid');
+            grid.innerHTML = rooms.map(room => {
+                const hasReading = room.timestamp;
+                const unit = room.unit == null ? '-' : `${Number(room.unit).toFixed(2)} kWh`;
+                const voltage = room.voltage == null ? '-' : `${Number(room.voltage).toFixed(1)} V`;
+                const current = room.current == null ? '-' : `${Number(room.current).toFixed(2)} A`;
+                const updated = hasReading ? new Date(room.timestamp).toLocaleTimeString('th-TH') : 'ยังไม่มีการส่งค่า';
+                return `<article class="room-meter-card">
+                    <h3>ห้อง ${room.roomNumber}</h3>
+                    <div class="room-unit">${unit}</div>
+                    <div class="room-meta">${room.meterId || '-'}<br>แรงดัน ${voltage} · กระแส ${current}<br>${updated}</div>
+                </article>`;
+            }).join('');
+        }
+
+        function updateDashboardWithData(meter) {
+            const nowStr = new Date().toLocaleTimeString('th-TH');
+            
+            const v = meter.voltage || 220.5;
+            const i = meter.current || 1.25;
+            const p = meter.power || (v * i * 0.95);
+            const kwh = meter.unit || meter.energy || 35.9;
+            const co2 = (kwh * 0.4999).toFixed(1);
+
+            // Update Cards
+            document.getElementById('stat-kwh').innerText = kwh.toFixed(1);
+            document.getElementById('stat-co2').innerText = co2;
+            document.getElementById('voltage-live').innerText = `${v.toFixed(1)} V`;
+            document.getElementById('current-live').innerText = `${i.toFixed(2)} A`;
+
+            // Power Factor
+            let pf = 0.95;
+            if (v > 0 && i > 0 && p > 0) {
+                pf = Math.min(1.0, (p / (v * i))).toFixed(3);
+            }
+            document.getElementById('pf-val').innerText = pf;
+            if (pfGaugeChart) {
+                pfGaugeChart.data.datasets[0].data = [pf, 1 - pf];
+                pfGaugeChart.update();
+            }
+
+            // Push to Chart
+            if (timeLabels.length >= maxDataPoints) {
+                timeLabels.shift();
+                voltageData.shift();
+                currentData.shift();
+            }
+            timeLabels.push(nowStr);
+            voltageData.push(v);
+            currentData.push(i);
+
+            voltageChart.update();
+            currentChart.update();
+        }
+
+        // Fallback for demonstration when no backend record exists yet
+        function useSimulatedData() {
+            const simV = 220 + (Math.random() * 6 - 3);
+            const simI = 1.2 + (Math.random() * 0.4 - 0.2);
+            const simEnergy = 35.9 + (Math.random() * 0.5);
+
+            updateDashboardWithData({
+                voltage: simV,
+                current: simI,
+                power: simV * simI * 0.95,
+                unit: simEnergy,
+                meterId: 'METER001'
+            });
+        }
+
+        function renderTable(list) {
+            const tbody = document.getElementById('logs-tbody');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No records found in database</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.slice(-5).reverse().map(item => `
+                <tr>
+                    <td>${item.timestamp ? new Date(item.timestamp).toLocaleString('th-TH') : '-'}</td>
+                    <td><strong style="color: var(--purple-main);">${item.meterId || 'METER001'}</strong></td>
+                    <td>${(item.voltage || 220).toFixed(1)} V</td>
+                    <td>${(item.current || 1.2).toFixed(2)} A</td>
+                    <td>${(item.power || 264).toFixed(1)} W</td>
+                    <td>${(item.unit || item.energy || 0).toFixed(1)} kWh</td>
+                    <td><span class="status-pill status-normal">NORMAL</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Auto Refresh Countdown Timer (5s)
+        let countdown = 5;
+        setInterval(() => {
+            countdown--;
+            document.getElementById('timer-sec').innerText = `${countdown}s`;
+            if (countdown <= 0) {
+                countdown = 5;
+                fetchLiveData();
+            }
+        }, 1000);
+
+        function checkAuth() {
+            const token = localStorage.getItem('jwtToken');
+            const username = localStorage.getItem('username');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            if (username) {
+                document.getElementById('user-display').innerText = username;
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userRole');
+            window.location.href = '/login';
+        }
+
+        // On Load
+        window.addEventListener('load', () => {
+            checkAuth();
+            initCharts();
+            fetchLiveData();
+        });
+    </script>
+</body>
+</html>
