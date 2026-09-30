@@ -46,3 +46,10 @@ uploads/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Arduino Build Files
+**/build/
+*.elf
+*.map
+*.o
+*.d

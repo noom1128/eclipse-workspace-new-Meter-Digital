@@ -10,11 +10,12 @@ import java.nio.charset.StandardCharsets;
 
 @RestController
 public class HomeController {
-
+    // Test Git change
     @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     @ResponseBody
     public String home() {
-        String[] paths = {"/dashboard.html", "/static/dashboard.html", "/templates/dashboard.html", "/public/dashboard.html"};
+        String[] paths = { "/dashboard.html", "/static/dashboard.html", "/templates/dashboard.html",
+                "/public/dashboard.html" };
         for (String path : paths) {
             try (InputStream is = getClass().getResourceAsStream(path)) {
                 if (is != null) {
@@ -34,6 +35,13 @@ public class HomeController {
         return home();
     }
 
+    @GetMapping(value = { "/maintenance", "/meter-gateway-setup",
+            "/gateway-setup" }, produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    @ResponseBody
+    public String maintenance() {
+        return getInlineMaintenanceHtml();
+    }
+
     @GetMapping(value = "/live-dashboard", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     @ResponseBody
     public String liveDashboard(@RequestParam(required = false, defaultValue = "101") String roomNumber) {
@@ -43,7 +51,7 @@ public class HomeController {
     @GetMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     @ResponseBody
     public String login() {
-        String[] paths = {"/login.html", "/static/login.html", "/templates/login.html", "/public/login.html"};
+        String[] paths = { "/login.html", "/static/login.html", "/templates/login.html", "/public/login.html" };
         for (String path : paths) {
             try (InputStream is = getClass().getResourceAsStream(path)) {
                 if (is != null) {
@@ -137,10 +145,14 @@ public class HomeController {
                 + "  bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;gap:10px;background:rgba(15,23,42,0.95);border:2px solid #00f2fe;padding:12px 20px;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,0.6);color:#fff;align-items:center;font-family:sans-serif;backdrop-filter:blur(10px);';"
                 + "  if (token && role === 'ROLE_ADMIN') {"
                 + "    bar.innerHTML = '<span>👑 <b>Admin Mode Active</b></span>' +"
+                + "      '<button id=\"btnGatewaySetup\" style=\"background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:700;\">🛠️ Meter Gateway Setup</button>' +"
+                + "      '<button id=\"btnLiveDashboardNav\" style=\"background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border:none;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:700;\">⚡ Realtime Monitor</button>' +"
                 + "      '<button id=\"btnAddRoomModal\" style=\"background:linear-gradient(135deg,#00f2fe,#4facfe);color:#0f172a;border:none;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:700;\">➕ เพิ่มห้องใหม่</button>' +"
                 + "      '<button id=\"btnDeleteRoomModal\" style=\"background:#f59e0b;color:#0f172a;border:none;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:700;\">🗑️ ลบห้องพัก</button>' +"
                 + "      '<button id=\"btnLogoutAdmin\" style=\"background:#ef4444;color:#fff;border:none;padding:8px 12px;border-radius:12px;cursor:pointer;font-weight:600;\">ออกจากระบบ</button>';"
                 + "    document.body.appendChild(bar);"
+                + "    document.getElementById('btnGatewaySetup').onclick = function() { window.location.href = '/meter-gateway-setup'; };"
+                + "    document.getElementById('btnLiveDashboardNav').onclick = function() { window.location.href = '/live-dashboard?roomNumber=101'; };"
                 + "    document.getElementById('btnLogoutAdmin').onclick = function() { localStorage.clear(); window.location.reload(); };"
                 + "    document.getElementById('btnAddRoomModal').onclick = function() {"
                 + "      const roomNum = prompt('กรอกหมายเลขห้องใหม่ (เช่น 106):');"
@@ -176,8 +188,12 @@ public class HomeController {
                 + "    };"
                 + "  } else {"
                 + "    bar.innerHTML = '<span>🔒 ยังไม่ได้เข้าสู่ระบบ Admin</span>' +"
+                + "      '<button id=\"btnGatewaySetupGuest\" style=\"background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:600;\">🛠️ Meter Gateway Setup</button>' +"
+                + "      '<button id=\"btnLiveDashboardGuest\" style=\"background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border:none;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:600;\">⚡ Realtime Monitor</button>' +"
                 + "      '<button id=\"btnLoginAdmin\" style=\"background:#0284c7;color:#fff;border:none;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:600;\">🔑 ไปหน้าล็อกอิน Admin</button>';"
                 + "    document.body.appendChild(bar);"
+                + "    document.getElementById('btnGatewaySetupGuest').onclick = function() { window.location.href = '/meter-gateway-setup'; };"
+                + "    document.getElementById('btnLiveDashboardGuest').onclick = function() { window.location.href = '/live-dashboard?roomNumber=101'; };"
                 + "    document.getElementById('btnLoginAdmin').onclick = function() { window.location.href = '/login'; };"
                 + "  }"
                 + "}"
@@ -270,7 +286,13 @@ public class HomeController {
                 + "</style></head><body>"
                 + "<div class='container'>"
                 + "<div class='nav-bar'><a href='/' class='back-btn'>⬅️ กลับหน้าหลักรายการห้อง (Main Dashboard)</a></div>"
-                + "<div class='header'><h1>⚡ Real-time Meter: ห้อง <span id='roomTitle'>" + defaultRoom + "</span></h1>"
+                + "<div class='header'><div style='display:flex;align-items:center;gap:15px;flex-wrap:wrap;'>"
+                + "<h1>⚡ Real-time Meter</h1>"
+                + "<div style='display:flex;align-items:center;gap:8px;background:rgba(15,23,42,0.85);border:1px solid #00f2fe;padding:6px 14px;border-radius:14px;box-shadow:0 0 15px rgba(0,242,254,0.2);'>"
+                + "<span style='color:#94a3b8;font-size:0.85rem;font-weight:600;'>🏢 เลือกห้องพัก:</span>"
+                + "<select id='roomSelect' onchange='changeRoom(this.value)' style='background:#0f172a;color:#00f2fe;border:1px solid rgba(0,242,254,0.4);font-size:1rem;font-weight:700;outline:none;cursor:pointer;padding:4px 10px;border-radius:8px;'>"
+                + "<option value='" + defaultRoom + "'>ห้อง " + defaultRoom + "</option></select>"
+                + "</div></div>"
                 + "<div class='status-badge'><div class='dot'></div><span id='statusText'>LIVE UPDATING</span></div></div>"
                 + "<div class='grid'>"
                 + "<div class='card voltage'><div class='card-title'><span>Voltage (แรงดันไฟ)</span><span>⚡</span></div>"
@@ -293,19 +315,146 @@ public class HomeController {
                 + "</div></div>"
                 + "<script>"
                 + "const urlParams = new URLSearchParams(window.location.search);"
-                + "const roomNum = urlParams.get('roomNumber') || '" + defaultRoom + "';"
-                + "document.getElementById('roomTitle').textContent = roomNum;"
-                + "async function fetchLatestMeter(){try{const res=await fetch('/api/meter/latest?roomNumber='+encodeURIComponent(roomNum));if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();if(data){"
+                + "let currentRoomNum = urlParams.get('roomNumber') || '" + defaultRoom + "';"
+                + "async function loadRooms(){try{const res=await fetch('/api/rooms');if(res.ok){const rooms=await res.json();if(rooms&&rooms.length>0){const sel=document.getElementById('roomSelect');sel.innerHTML=rooms.map(r=>'<option value=\"'+r.roomNumber+'\" '+(r.roomNumber===currentRoomNum?'selected':'')+'>ห้อง '+r.roomNumber+(r.tenantName?' ('+r.tenantName+')':'')+'</option>').join('');}}}catch(e){console.error(e);}}"
+                + "function changeRoom(newRoom){currentRoomNum=newRoom;window.history.pushState({},'','/live-dashboard?roomNumber='+encodeURIComponent(newRoom));fetchLatestMeter();}"
+                + "async function fetchLatestMeter(){try{const res=await fetch('/api/meter/latest?roomNumber='+encodeURIComponent(currentRoomNum));if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();if(data){"
                 + "document.getElementById('valVoltage').textContent=data.voltage!==undefined&&data.voltage!==null?data.voltage.toFixed(2):'0.00';"
                 + "document.getElementById('valEnergy').textContent=data.energy!==undefined&&data.energy!==null?data.energy.toFixed(2):(data.unit!==undefined&&data.unit!==null?data.unit.toFixed(2):'0.00');"
                 + "document.getElementById('valCurrent').textContent=data.current!==undefined&&data.current!==null?data.current.toFixed(3):'0.000';"
                 + "document.getElementById('valPower').textContent=data.power!==undefined&&data.power!==null?data.power.toFixed(4):'0.000';"
-                + "const rNum=data.roomNumber||(data.room?data.room.roomNumber:roomNum);"
+                + "const rNum=data.roomNumber||(data.room?data.room.roomNumber:currentRoomNum);"
                 + "document.getElementById('valMeterId').textContent=(data.meterId||'METER001')+' (ห้อง '+rNum+')';"
                 + "if(data.timestamp){const dt=new Date(data.timestamp);document.getElementById('valTimestamp').textContent=dt.toLocaleTimeString('th-TH')+' ('+dt.toLocaleDateString('th-TH')+')';}"
                 + "document.getElementById('statusText').textContent='LIVE UPDATING';"
                 + "}}catch(err){console.error('Fetch error:',err);document.getElementById('statusText').textContent='OFFLINE / WAITING';}}"
-                + "fetchLatestMeter();setInterval(fetchLatestMeter,3000);"
+                + "loadRooms();fetchLatestMeter();setInterval(fetchLatestMeter,3000);"
+                + "</script></body></html>";
+    }
+
+    private String getInlineMaintenanceHtml() {
+        return "<!DOCTYPE html><html lang='th'><head><meta charset='UTF-8'>"
+                + "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                + "<title>🛠️ Technician Maintenance Center - Opta / ESP32 Config</title>"
+                + "<link href='https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap' rel='stylesheet'>"
+                + "<style>"
+                + ":root{--bg:#0b0f19;--card-bg:rgba(22,31,49,0.85);--card-border:rgba(255,255,255,0.1);--text:#fff;--text-muted:#94a3b8;--primary:#00f2fe;--accent:#4facfe;}"
+                + "*{box-sizing:border-box;margin:0;padding:0;}"
+                + "body{font-family:'Outfit',sans-serif;background:var(--bg);background-image:radial-gradient(at 0% 0%,rgba(0,242,254,0.12) 0px,transparent 50%),radial-gradient(at 100% 100%,rgba(79,172,254,0.12) 0px,transparent 50%);min-height:100vh;color:var(--text);padding:30px 20px;display:flex;flex-direction:column;align-items:center;}"
+                + ".container{max-width:1100px;width:100%;}"
+                + ".header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:18px;border-bottom:1px solid var(--card-border);flex-wrap:wrap;gap:15px;}"
+                + ".header h1{font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,#00f2fe 0%,#4facfe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}"
+                + ".btn-action{background:linear-gradient(135deg,#00f2fe 0%,#4facfe 100%);color:#0f172a;border:none;padding:10px 18px;border-radius:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}"
+                + ".btn-action:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,242,254,0.4);}"
+                + ".btn-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid var(--card-border);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600;}"
+                + ".btn-danger{background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:#f87171;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;}"
+                + ".grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;}"
+                + ".card-stat{background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:18px;padding:20px;}"
+                + ".stat-label{font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;}"
+                + ".stat-val{font-size:2rem;font-weight:700;}"
+                + ".table-card{background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:20px;padding:24px;overflow-x:auto;}"
+                + "table{width:100%;border-collapse:collapse;text-align:left;}"
+                + "th,td{padding:14px 16px;border-bottom:1px solid var(--card-border);font-size:0.92rem;}"
+                + "th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;}"
+                + ".badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;}"
+                + ".badge-online{background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.4);}"
+                + ".badge-offline{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);}"
+                + ".modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px;}"
+                + ".modal-content{background:#111827;border:1px solid var(--card-border);border-radius:24px;padding:30px;max-width:550px;width:100%;max-height:90vh;overflow-y:auto;}"
+                + ".modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}"
+                + ".modal-title{font-size:1.3rem;font-weight:700;color:var(--primary);}"
+                + ".form-group{margin-bottom:16px;}"
+                + ".form-group label{display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;}"
+                + ".form-group input, .form-group select, .form-group textarea{width:100%;background:rgba(15,23,42,0.8);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;color:#fff;font-size:0.95rem;outline:none;}"
+                + ".form-group input:focus,.form-group select:focus{border-color:var(--primary);}"
+                + ".nav-bar{margin-bottom:20px;display:flex;gap:15px;}"
+                + ".back-link{color:var(--primary);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;}"
+                + "</style></head><body>"
+                + "<div class='container'>"
+                + "<div class='nav-bar'><a href='/' class='back-link'>⬅️ กลับหน้าหลัก Dashboard</a></div>"
+                + "<div class='header'><div><h1>🛠️ Technician Maintenance Center</h1><p style='color:var(--text-muted);font-size:0.9rem;'>ระบบจัดการและส่ง Config ไปยัง Arduino Opta / ESP32 Gateway</p></div>"
+                + "<button class='btn-action' onclick='openAddModal()'>➕ ลงทะเบียน Gateway ใหม่</button></div>"
+                + "<div class='grid-stats'>"
+                + "<div class='card-stat'><div class='stat-label'> Gateway ทั้งหมด</div><div class='stat-val' id='cntTotal'>0</div></div>"
+                + "<div class='card-stat'><div class='stat-label'> สถานะ ONLINE</div><div class='stat-val' style='color:#34d399' id='cntOnline'>0</div></div>"
+                + "<div class='card-stat'><div class='stat-label'> สถานะ WARNING / OFFLINE</div><div class='stat-val' style='color:#f87171' id='cntOffline'>0</div></div>"
+                + "</div>"
+                + "<div class='table-card'>"
+                + "<table><thead><tr><th>Device ID</th><th>ชื่อบอร์ด / สถานที่</th><th>IP Address</th><th>รุ่นมิเตอร์ที่ต่อ</th><th>สถานะ</th><th>เครื่องมือช่าง (Gateway Tool)</th><th>การจัดการ</th></tr></thead>"
+                + "<tbody id='deviceTableBody'><tr><td colspan='7' style='text-align:center;color:var(--text-muted)'>กำลังโหลดข้อมูล...</td></tr></tbody></table>"
+                + "</div></div>"
+
+                // Modal: Edit & Push Config
+                + "<div id='configModal' class='modal-overlay'><div class='modal-content'>"
+                + "<div class='modal-header'><h3 class='modal-title'>⚙️ ตั้งค่า & Push Config ไปยังบอร์ด</h3><span style='cursor:pointer;font-size:1.4rem' onclick='closeModal()'>✖</span></div>"
+                + "<form id='configForm'>"
+                + "<input type='hidden' id='cfgId'>"
+                + "<div class='form-group'><label>Device ID</label><input type='text' id='cfgDeviceId' required readonly style='opacity:0.7'></div>"
+                + "<div class='form-group'><label>ชื่ออุปกรณ์ / สถานที่ติดตั้ง</label><input type='text' id='cfgName' placeholder='เช่น Arduino Opta อาคาร A ชั้น 1' required></div>"
+                + "<div class='form-group'><label>IP Address ของ Opta / ESP32</label><input type='text' id='cfgIp' placeholder='เช่น 10.221.143.118' required></div>"
+                + "<div class='form-group'><label>Server IP (Spring Boot IP)</label><input type='text' id='cfgServerIp' placeholder='เช่น 10.221.143.108' value='10.221.143.108' required></div>"
+                + "<div class='form-group'><label>Server Port</label><input type='number' id='cfgServerPort' value='8080' required></div>"
+                + "<div class='form-group'><label>Wi-Fi SSID</label><input type='text' id='cfgSsid' placeholder='ชื่อ Wi-Fi'></div>"
+                + "<div class='form-group'><label>Wi-Fi Password</label><input type='password' id='cfgPassword' placeholder='รหัสผ่าน Wi-Fi'></div>"
+                + "<div class='form-group'><label>รุ่นมิเตอร์หลักที่ใช้งาน</label>"
+                + "<select id='cfgModel'><option value='CIRCUTOR_CVMC5'>Circutor CVM-C5</option><option value='SCHNEIDER_PM2200'>Schneider PM2200</option></select></div>"
+                + "<div class='form-group'><label>ความถี่ในการอ่านค่า (วินาที)</label><input type='number' id='cfgInterval' value='10' required></div>"
+                + "<div style='display:flex;gap:10px;margin-top:20px;'>"
+                + "<button type='button' class='btn-secondary' style='flex:1' onclick='saveDeviceOnly()'>💾 บันทึกในระบบ</button>"
+                + "<button type='submit' class='btn-action' style='flex:1.5'>🚀 Push Config ไปยังบอร์ด</button>"
+                + "</div></form></div></div>"
+
+                + "<script>"
+                + "async function loadDevices(){try{const res=await fetch('/api/maintenance/devices');const devices=await res.json();"
+                + "document.getElementById('cntTotal').textContent=devices.length;"
+                + "const online=devices.filter(d=>d.status==='ONLINE').length;"
+                + "document.getElementById('cntOnline').textContent=online;"
+                + "document.getElementById('cntOffline').textContent=devices.length-online;"
+                + "const tbody=document.getElementById('deviceTableBody');"
+                + "if(devices.length===0){tbody.innerHTML='<tr><td colspan=\"7\" style=\"text-align:center;color:var(--text-muted)\">ยังไม่มีบอร์ดในระบบ กดปุ่มเพิ่ม Gateway ใหม่ด้านบน</td></tr>';return;}"
+                + "window.deviceMap=new Map(devices.map(d=>[d.id,d]));"
+                + "tbody.innerHTML=devices.map(d=>{"
+                + "  const ip=(d.ipAddress||'').trim();"
+                + "  const tools=ip?("
+                + "    '<a href=\"http://' + ip + '/\" target=\"_blank\" style=\"background:#0284c7;color:#fff;padding:3px 8px;border-radius:6px;text-decoration:none;font-size:0.75rem;font-weight:600;display:inline-block;margin:2px;\" title=\"ดูหน้าสถานะทั่วไป\">🌐 สถานะ</a>'"
+                + "    + '<a href=\"http://' + ip + '/log\" target=\"_blank\" style=\"background:#10b981;color:#fff;padding:3px 8px;border-radius:6px;text-decoration:none;font-size:0.75rem;font-weight:600;display:inline-block;margin:2px;\" title=\"ดู Live Log การอ่านค่ามิเตอร์\">📋 Live Log</a>'"
+                + "    + '<a href=\"http://' + ip + '/update\" target=\"_blank\" style=\"background:#8b5cf6;color:#fff;padding:3px 8px;border-radius:6px;text-decoration:none;font-size:0.75rem;font-weight:600;display:inline-block;margin:2px;\" title=\"อัปเดต Firmware ผ่านเว็บ (OTA)\">⚡ OTA Update</a>'"
+                + "    + '<a href=\"http://' + ip + '/reset-ap\" target=\"_blank\" onclick=\"return confirm(\\'ต้องการรีเซ็ตบอร์ดเข้าโหมด AP Setup ใช่หรือไม่?\\')\" style=\"background:#f59e0b;color:#0f172a;padding:3px 8px;border-radius:6px;text-decoration:none;font-size:0.75rem;font-weight:700;display:inline-block;margin:2px;\" title=\"รีเซ็ตเข้าโหมด AP\">🔄 Reset AP</a>'"
+                + "  ):'<span style=\"color:var(--text-muted);font-size:0.8rem;\">ยังไม่ได้ระบุ IP</span>';"
+                + "  return '<tr>'"
+                + "    + '<td><b>' + (d.deviceId||'') + '</b></td>'"
+                + "    + '<td>' + (d.deviceName||'-') + '</td>'"
+                + "    + '<td><code>' + (d.ipAddress||'-') + '</code></td>'"
+                + "    + '<td><span style=\"color:#00f2fe\">' + (d.activeMeterModel||'CIRCUTOR_CVMC5') + '</span></td>'"
+                + "    + '<td><span class=\"badge ' + (d.status==='ONLINE'?'badge-online':'badge-offline') + '\">' + (d.status||'UNKNOWN') + '</span></td>'"
+                + "    + '<td>' + tools + '</td>'"
+                + "    + '<td><button class=\"btn-action\" style=\"padding:4px 10px;font-size:0.8rem\" onclick=\"openEditById(' + d.id + ')\">⚙️ ตั้งค่า & Push</button> '"
+                + "    + '<button class=\"btn-danger\" style=\"padding:4px 8px;font-size:0.8rem\" onclick=\"deleteDev(' + d.id + ')\">🗑️</button></td>'"
+                + "    + '</tr>';"
+                + "}).join('');"
+                + "}catch(e){console.error(e);}}"
+                + "function openEditById(id){const d=window.deviceMap?window.deviceMap.get(id):null;if(d)openEditModal(d);}"
+                + "function openAddModal(){document.getElementById('configForm').reset();document.getElementById('cfgId').value='';document.getElementById('cfgDeviceId').readOnly=false;document.getElementById('cfgDeviceId').value='OPTA-DORM-01';document.getElementById('configModal').style.display='flex';}"
+                + "function openEditModal(d){document.getElementById('cfgId').value=d.id||'';document.getElementById('cfgDeviceId').value=d.deviceId||'';document.getElementById('cfgDeviceId').readOnly=true;"
+                + "document.getElementById('cfgName').value=d.deviceName||'';document.getElementById('cfgIp').value=d.ipAddress||'';"
+                + "document.getElementById('cfgServerIp').value=d.serverIp||'10.221.143.108';document.getElementById('cfgServerPort').value=d.serverPort||8080;"
+                + "document.getElementById('cfgSsid').value=d.wifiSsid||'';document.getElementById('cfgPassword').value=d.wifiPassword||'';"
+                + "document.getElementById('cfgModel').value=d.activeMeterModel||'CIRCUTOR_CVMC5';"
+                + "document.getElementById('configModal').style.display='flex';}"
+                + "function closeModal(){document.getElementById('configModal').style.display='none';}"
+                + "async function saveDeviceOnly(){"
+                + "const dev={deviceId:document.getElementById('cfgDeviceId').value,deviceName:document.getElementById('cfgName').value,ipAddress:document.getElementById('cfgIp').value,serverIp:document.getElementById('cfgServerIp').value,serverPort:parseInt(document.getElementById('cfgServerPort').value),wifiSsid:document.getElementById('cfgSsid').value,wifiPassword:document.getElementById('cfgPassword').value,activeMeterModel:document.getElementById('cfgModel').value};"
+                + "try{const res=await fetch('/api/maintenance/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dev)});if(res.ok){alert('บันทึกข้อมูลสำเร็จ!');closeModal();loadDevices();}}catch(e){alert('Error: '+e);}}"
+                + "document.getElementById('configForm').addEventListener('submit',async function(e){e.preventDefault();"
+                + "await saveDeviceOnly();"
+                + "const devId=document.getElementById('cfgDeviceId').value;"
+                + "const allRes=await fetch('/api/maintenance/devices');const list=await allRes.json();const found=list.find(d=>d.deviceId===devId);"
+                + "if(found&&found.id){try{const pRes=await fetch('/api/maintenance/devices/'+found.id+'/push-config',{method:'POST'});"
+                + "const resData=await pRes.json();if(resData.success){alert('🚀 Push Config ไปยังบอร์ด '+found.ipAddress+' เรียบร้อยแล้ว!');}"
+                + "else{alert('⚠️ บันทึกข้อมูลแล้ว แต่ยิง Push Config ไม่สำเร็จ (บอร์ดอาจยังไม่ได้เปิดรับ /api/config): '+resData.message);}}"
+                + "catch(err){alert('Push error: '+err);}}loadDevices();});"
+                + "async function deleteDev(id){if(confirm('แน่ใจหรือไม่ว่าต้องการลบ Gateway นี้?')){await fetch('/api/maintenance/devices/'+id,{method:'DELETE'});loadDevices();}}"
+                + "loadDevices();setInterval(loadDevices,5000);"
                 + "</script></body></html>";
     }
 }

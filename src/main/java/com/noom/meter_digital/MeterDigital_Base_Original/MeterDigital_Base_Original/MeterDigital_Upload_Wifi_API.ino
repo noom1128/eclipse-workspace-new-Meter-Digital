@@ -18,11 +18,6 @@
 Preferences prefs;
 DNSServer dnsServer;
 const byte DNS_PORT = 53;
-const char* AP_SSID = "Meter-Gateway-Setup";
-const char* AP_PASSWORD = "12345678";
-const IPAddress AP_IP(192, 168, 4, 1);
-const IPAddress AP_GATEWAY(192, 168, 4, 1);
-const IPAddress AP_SUBNET(255, 255, 255, 0);
 
 // =====================================================
 // Meter Selection Control
@@ -37,8 +32,8 @@ MeterModel currentMeterModel = METER_CIRCUTOR_CVMC5;
 // =====================================================
 // Dynamic Config Variables
 // =====================================================
-String wifiSsid = "";
-String wifiPassword = "";
+String wifiSsid = "Galaxy A15 5G 4A21";
+String wifiPassword = "0859631128";
 String customServerIP = "10.221.143.108";
 int customServerPort = 8080;
 String customRoomNumber = "101";
@@ -127,18 +122,13 @@ void saveConfigToNVS();
 void startApCaptivePortal();
 void handleCaptivePortalSave();
 
-void clearNVSConfig() {
-  prefs.begin("meter_cfg", false);
-  prefs.clear();
-  prefs.end();
-  wifiSsid = "";
-  wifiPassword = "";
-}
-
+// =====================================================
+// NVS FLASH FUNCTIONS
+// =====================================================
 void loadConfigFromNVS() {
   prefs.begin("meter_cfg", true);
-  wifiSsid = prefs.getString("ssid", "");
-  wifiPassword = prefs.getString("pass", "");
+  wifiSsid = prefs.getString("ssid", wifiSsid);
+  wifiPassword = prefs.getString("pass", wifiPassword);
   customServerIP = prefs.getString("server_ip", customServerIP);
   customServerPort = prefs.getInt("server_port", customServerPort);
   customRoomNumber = prefs.getString("room", customRoomNumber);
@@ -180,19 +170,12 @@ void startApCaptivePortal() {
   isApMode = true;
   addLog("======================================");
   addLog("Starting AP Captive Portal Setup Mode");
-  addLog("Connect Wi-Fi: " + String(AP_SSID));
+  addLog("Connect Wi-Fi: Meter-Gateway-Setup");
   addLog("Open Browser: http://192.168.4.1");
   addLog("======================================");
 
-  WiFi.disconnect(false, false);
   WiFi.mode(WIFI_AP);
-  delay(100);
-  WiFi.softAPConfig(AP_IP, AP_GATEWAY, AP_SUBNET);
-  if (!WiFi.softAP(AP_SSID, AP_PASSWORD)) {
-    addLog("ERROR: Cannot start setup Wi-Fi access point.");
-    return;
-  }
-  addLog("Setup Wi-Fi started. AP IP: " + WiFi.softAPIP().toString());
+  WiFi.softAP("Meter-Gateway-Setup", "12345678");
 
   dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
 
@@ -531,9 +514,7 @@ void setupEthernet() {
 }
 
 void connectWiFi() {
-  wifiSsid.trim();
-  if (wifiSsid == "" || wifiSsid == "FORCE_AP") {
-    addLog("No saved Wi-Fi configuration. Starting setup access point.");
+  if (wifiSsid == "") {
     startApCaptivePortal();
     return;
   }
@@ -544,9 +525,8 @@ void connectWiFi() {
 
   unsigned long start = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - start > 8000) {
-      addLog("Wi-Fi connection timeout/failed. Clearing NVS & starting AP Captive Portal...");
-      clearNVSConfig();
+    if (millis() - start > 12000) {
+      addLog("Wi-Fi connection failed. Starting AP Captive Portal...");
       startApCaptivePortal();
       return;
     }

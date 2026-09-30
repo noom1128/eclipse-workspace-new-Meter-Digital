@@ -35,7 +35,7 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/login", "/billing", "/old-dashboard", "/live-dashboard", "/dashboard.html", "/css/**", "/js/**", "/api/auth/**").permitAll()
+            .requestMatchers("/", "/login", "/billing", "/old-dashboard", "/live-dashboard", "/maintenance", "/meter-gateway-setup", "/gateway-setup", "/error", "/dashboard.html", "/css/**", "/js/**", "/api/auth/**", "/api/maintenance/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/settings/promptpay-qr").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meter").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/meter", "/api/meter/latest", "/api/meter/network-mode").permitAll()
