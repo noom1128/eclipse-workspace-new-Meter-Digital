@@ -51,11 +51,16 @@ public class BillingService {
                 : readingAtOrBefore(roomId, month.atEndOfMonth().atTime(23, 59, 59));
         if (opening == null) opening = 0.0;
         if (closing == null) closing = opening;
-        if (closing < opening) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Closing meter reading must not be lower than opening reading");
-        }
 
-        double electricityUnits = round(closing - opening);
+        UtilityCalculationEngine calcEngine = new UtilityCalculationEngine();
+        UtilityCalculationEngine.RateType elecType = UtilityCalculationEngine.RateType.PER_UNIT;
+        try { elecType = UtilityCalculationEngine.RateType.valueOf(room.getElecRateType()); } catch (Exception ignored) {}
+
+        UtilityCalculationEngine.CalculationResult elecCalc = calcEngine.calculateCost(
+                opening, closing, elecType, valueOrZero(room.getRatePerUnit()), valueOrZero(room.getElecMinCharge()), room.getMeterDigits(), null
+        );
+
+        double electricityUnits = elecCalc.getUnitsUsed();
         double electricityRate = valueOrZero(room.getRatePerUnit());
         double water = valueOrZero(waterUnits);
         double waterRate = waterRateOverride == null ? valueOrZero(room.getWaterRatePerUnit()) : waterRateOverride;
@@ -63,7 +68,7 @@ public class BillingService {
         if (waterRate < 0 || rent < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rent and water rate must not be negative");
         }
-        double electricityAmount = round(electricityUnits * electricityRate);
+        double electricityAmount = elecCalc.getTotalAmount();
         double waterAmount = round(water * waterRate);
         List<Map<String, Object>> additionalCharges = normalizedCharges(requestedCharges);
         double additionalAmount = additionalCharges.stream()

@@ -28,6 +28,21 @@ public class MeterReadingController {
     @Autowired
     RoomRepository roomRepository;
 
+    @Autowired
+    com.noom.meter_digital.service.MeterOcrService ocrService;
+
+    @PostMapping(value = "/ocr-scan", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public java.util.Map<String, Object> ocrScan(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        return ocrService.processMeterPhoto(file);
+    }
+
+    @PostMapping(value = "/ocr-scan-cloud", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public java.util.Map<String, Object> ocrScanCloud(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "apiKey", required = false) String apiKey) {
+        return ocrService.processMeterPhotoCloudAI(file, apiKey);
+    }
+
     @PostMapping
     public MeterReading save(@org.springframework.web.bind.annotation.RequestBody MeterReading meter) {
         String requestedRoom = meter.getRoomNumber();
