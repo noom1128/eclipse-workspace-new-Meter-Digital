@@ -69,7 +69,7 @@ const IPAddress AP_IP(192, 168, 4, 1);
 // Dynamic Config Variables
 String wifiSsid = "";
 String wifiPassword = "";
-String customServerIP = "10.221.143.108";
+String customServerIP = "10.21.72.108";
 int customServerPort = 8080;
 
 // *** Logic การผูกห้อง & โหมดการทำงาน ***
@@ -218,6 +218,15 @@ void setup() {
       html += "<h2>ESP32-CAM System Log</h2>";
       html += "<pre>" + logsBuffer + "</pre></body></html>";
       server.send(200, "text/html", html);
+    });
+
+    // Quick Server IP Update Endpoint (e.g. /set-server?ip=10.21.72.108&port=8080)
+    server.on("/set-server", []() {
+      if (server.hasArg("ip")) customServerIP = server.arg("ip");
+      if (server.hasArg("port")) customServerPort = server.arg("port").toInt();
+      saveConfigToNVS();
+      addLog("Server IP updated to: " + customServerIP + ":" + String(customServerPort));
+      server.send(200, "text/plain", "Updated Server IP to: " + customServerIP + ":" + String(customServerPort));
     });
 
     // Reset Config to AP Mode
