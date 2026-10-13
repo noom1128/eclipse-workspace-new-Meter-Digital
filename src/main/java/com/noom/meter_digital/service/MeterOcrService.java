@@ -858,6 +858,7 @@ public class MeterOcrService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             String prompt = "You are an expert utility meter reader. Read the counter digits of this electricity/water meter. "
+                    + "If the photo appears upside down, tilted, or inverted, automatically determine the correct upright orientation and read the digits properly. "
                     + "Most analog meters have 4 or 5 black digits for integer kWh, and optionally 1 red digit (or framed in red on the far right) for tenths of a kWh (decimal fraction 0.1). "
                     + "Return ONLY the final numeric reading (e.g. 8491 or 8491.4). If the last digit is in red or framed in red, format it with a decimal point (e.g. 8491.4). "
                     + "Do not include any words, letters, symbols or units. Just the number.";

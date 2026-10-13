@@ -81,8 +81,17 @@ String targetMode = "DIRECT_OCR"; // "DIRECT_OCR" หรือ "LINE_FLEX_MESSAG
 String workMode = "MANUAL";
 int captureIntervalMinutes = 5; // ถ่ายรูปอัตโนมัติทุกๆ กี่นาที (เมื่ออยู่โหมด AUTO)
 
+// การปรับทิศทางภาพกล้อง (แก้ปัญหากล้องกลับหัว / สลับซ้ายขวา)
+bool isVflip = false;   // พลิกบน-ล่าง
+bool isHmirror = false; // พลิกซ้าย-ขวา
+
+// สถานะการถ่ายรูปและไฟแฟลช
 unsigned long lastCaptureTime = 0;
-bool flashState = false;
+bool flashState = false; // ปิดแฟลชโดยเริ่มต้นเพื่อป้องกันแสงสะท้อนฝากระจกมิเตอร์
+
+String lastCaptureStatus = "";
+String lastCaptureReading = "";
+String lastCaptureMsg = "";
 
 WebServer server(80);
 bool isApMode = false;
@@ -94,10 +103,20 @@ void addLog(const String& message);
 void loadConfigFromNVS();
 void saveConfigToNVS();
 bool initCamera();
+void applyCameraOrientation();
 bool captureAndSendPhoto();
 void startApCaptivePortal();
 void connectWiFi();
 void handleJpgStream();
+
+void applyCameraOrientation() {
+  sensor_t * s = esp_camera_sensor_get();
+  if (s) {
+    s->set_vflip(s, isVflip ? 1 : 0);
+    s->set_hmirror(s, isHmirror ? 1 : 0);
+    addLog("Camera orientation applied: vflip=" + String(isVflip ? "1" : "0") + " hmirror=" + String(isHmirror ? "1" : "0"));
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -105,7 +124,7 @@ void setup() {
 
   if (FLASH_LED_PIN >= 0) {
     pinMode(FLASH_LED_PIN, OUTPUT);
-    digitalWrite(FLASH_LED_PIN, LOW);
+    digitalWrite(FLASH_LED_PIN, LOW); // ตรวจสอบให้แน่ใจว่าปิดแฟลชไว้เสมอ
   }
 
   addLog("======================================");
@@ -128,52 +147,133 @@ void setup() {
     addLog("WARNING: Camera failed to initialize, but Wi-Fi web server is RUNNING.");
   } else {
     addLog("Camera Initialized Successfully.");
+    applyCameraOrientation();
   }
 
   if (!isApMode) {
     // Web Dashboard หลักสำหรับกล้องจดมิเตอร์จานหมุน
     server.on("/", []() {
+      String orientationStatus = (isVflip && isHmirror) ? "หมุนกลับหัว 180°" : ((isVflip || isHmirror) ? "ปรับแต่งมุมมอง" : "มุมมองมาตรฐาน");
+      String serverUrl = "http://" + customServerIP + ":" + String(customServerPort);
+
       String html = "<!DOCTYPE html><html lang='th'><head><meta charset='UTF-8'>"
                     "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-                    "<title>📷 ESP32-CAM Retrofit Analog Meter</title>"
+                    "<title>📷 ESP32-CAM เล็งและอ่านมิเตอร์จานหมุน</title>"
                     "<style>"
-                    "body{font-family:sans-serif;background:#0f172a;color:#fff;padding:20px;display:flex;justify-content:center;}"
-                    ".card{background:#1e293b;border-radius:18px;padding:24px;max-width:500px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);}"
-                    "h2{color:#00f2fe;text-align:center;margin-bottom:6px;}"
-                    ".status-badge{display:inline-block;padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;margin-bottom:16px;}"
+                    "body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#f8fafc;padding:16px;display:flex;justify-content:center;margin:0;}"
+                    ".card{background:#1e293b;border-radius:20px;padding:22px;max-width:520px;width:100%;box-shadow:0 12px 35px rgba(0,0,0,0.5);box-sizing:border-box;}"
+                    "h2{color:#00f2fe;text-align:center;margin-top:0;margin-bottom:6px;font-size:1.4rem;}"
+                    ".status-row{display:flex;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}"
+                    ".status-badge{display:inline-block;padding:5px 12px;border-radius:20px;font-size:0.8rem;font-weight:bold;}"
                     ".bg-green{background:rgba(16,185,129,0.2);color:#34d399;border:1px solid #10b981;}"
                     ".bg-yellow{background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid #f59e0b;}"
-                    ".btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:1rem;font-weight:bold;cursor:pointer;margin-bottom:10px;text-align:center;text-decoration:none;box-sizing:border-box;}"
+                    ".bg-cyan{background:rgba(0,242,254,0.15);color:#00f2fe;border:1px solid #00f2fe;}"
+                    ".stream-container{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000;border:2px solid #334155;margin-bottom:14px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;}"
+                    ".stream-container img{width:100%;height:100%;object-fit:contain;display:block;}"
+                    ".target-guide{position:absolute;top:25%;left:15%;right:15%;bottom:25%;border:2px dashed #22c55e;border-radius:8px;box-shadow:0 0 12px rgba(34,197,94,0.5);pointer-events:none;display:flex;align-items:center;justify-content:center;text-align:center;}"
+                    ".target-label{background:rgba(15,23,42,0.8);color:#22c55e;font-size:0.75rem;padding:3px 8px;border-radius:4px;font-weight:bold;}"
+                    ".stream-overlay{position:absolute;top:10px;left:10px;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);padding:4px 10px;border-radius:20px;font-size:0.75rem;color:#38bdf8;font-weight:bold;display:flex;align-items:center;gap:6px;}"
+                    ".pulse-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 8px #22c55e;}"
+                    ".btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:1rem;font-weight:bold;cursor:pointer;margin-bottom:10px;text-align:center;text-decoration:none;box-sizing:border-box;transition:all 0.2s;}"
+                    ".btn:active{transform:scale(0.98);}"
                     ".btn-primary{background:linear-gradient(135deg,#00f2fe,#4facfe);color:#0f172a;box-shadow:0 4px 15px rgba(0,242,254,0.3);}"
-                    ".btn-secondary{background:#334155;color:#fff;}"
+                    ".btn-rotate{background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;box-shadow:0 4px 15px rgba(99,102,241,0.3);}"
+                    ".btn-secondary{background:#334155;color:#f8fafc;}"
                     ".btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;}"
-                    ".info-box{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:16px;font-size:0.9rem;text-align:left;}"
-                    "img.preview{width:100%;max-height:260px;object-fit:contain;border-radius:12px;border:1px solid #334155;margin-bottom:16px;background:#000;}"
+                    ".btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}"
+                    ".info-box{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;text-align:left;line-height:1.5;}"
+                    ".result-box{background:rgba(0,242,254,0.08);border:1px solid #00f2fe;border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;}"
+                    ".tip-box{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:10px;margin-bottom:12px;font-size:0.8rem;color:#fcd34d;line-height:1.4;text-align:left;}"
                     "</style></head><body><div class='card'>"
-                    "<h2>⚙️ ESP32-CAM อ่านมิเตอร์จานหมุน</h2>"
-                    "<div style='text-align:center;'>"
-                    "<span class='status-badge " + String(workMode == "MANUAL" ? "bg-yellow'>🧪 โหมดทดสอบ (Manual Only)" : "bg-green'>🚀 โหมดใช้งานจริง (Auto " + String(captureIntervalMinutes) + " นาที)") + "</span>"
+                    "<h2>📷 ESP32-CAM ส่องอ่านมิเตอร์</h2>"
+                    "<div class='status-row'>"
+                    "<span class='status-badge " + String(workMode == "MANUAL" ? "bg-yellow'>🧪 โหมดทดสอบ (Manual)" : "bg-green'>🚀 โหมดใช้งานจริง (Auto " + String(captureIntervalMinutes) + " นาที)") + "</span>"
+                    "<span class='status-badge bg-cyan'>📍 ห้อง " + customRoomNumber + "</span>"
+                    "<span class='status-badge bg-yellow'>📐 " + orientationStatus + "</span>"
                     "</div>"
-                    "<div class='info-box'>"
-                    "📍 <b>ผูกกับห้อง:</b> <b style='color:#00f2fe;font-size:1.1rem;'>" + customRoomNumber + "</b><br>"
-                    "🆔 <b>Device ID:</b> " + customDeviceId + "<br>"
-                    "🌐 <b>Spring Boot Server:</b> http://" + customServerIP + ":" + String(customServerPort) + "<br>"
-                    "⚙️ <b>โหมดประมวลผล:</b> " + targetMode +
+                    
+                    "<div class='stream-container'>"
+                    "<img id='liveImg' src='/stream' alt='Live Viewfinder'>"
+                    "<div class='target-guide'><div class='target-label'>🎯 เล็งตัวเลขให้อยู่ในกรอบนี้</div></div>"
+                    "<div class='stream-overlay'><span class='pulse-dot'></span> LIVE VIEW (<span id='fpsCounter'>--</span> fps)</div>"
                     "</div>"
-                    "<h3>📸 ภาพกล้องถ่ายสดสำหรับเล็งมุมหน้าปัดมิเตอร์:</h3>"
-                    "<img src='/stream' class='preview' alt='Camera Stream'>"
-                    "<a href='/capture' class='btn btn-primary'>📸 ถ่ายรูปสแกนส่ง Spring Boot เดี๋ยวนี้</a>"
-                    "<a href='/toggle-flash' class='btn btn-warning'>💡 " + String(flashState ? "ปิดไฟ Flash LED" : "เปิดไฟ Flash LED (ส่องหน้าปัด)") + "</a>"
-                    "<a href='/toggle-mode' class='btn btn-secondary'>🔄 สลับโหมด (ปัจจุบัน: " + workMode + ")</a>"
-                    "<div style='margin-top:16px;font-size:0.85rem;'>"
-                    "<a href='/log' style='color:#94a3b8;margin-right:12px;'>ดู System Log</a> | "
-                    "<a href='/reset-ap' style='color:#ef4444;'>ตั้งค่า Wi-Fi / เลขห้องใหม่</a>"
-                    "</div>"
-                    "</div></body></html>";
+
+                    "<div class='tip-box'>"
+                    "💡 <b>คำแนะนำการส่อง:</b> เล็งหน้าปัดมิเตอร์ให้อยู่ตรงกลางกรอบสีเขียว<br>"
+                    "• หากกล้องติดกลับหัว ให้กดปุ่ม <b>'🔄 หมุนภาพ 180°'</b> ด้านล่าง<br>"
+                    "• <b>ปิดไฟ Flash ไว้ดีที่สุด</b> เพื่อไม่ให้แสงขาวสะท้อนฝากระจกบดบังตัวเลข"
+                    "</div>";
+
+      if (lastCaptureStatus != "") {
+        html += "<div class='result-box'>"
+                "<div style='font-size:0.85rem;color:#94a3b8;'>ผลการอ่านภาพล่าสุด:</div>"
+                "<div style='font-size:1.4rem;font-weight:bold;color:#00f2fe;margin:4px 0;'>" + (lastCaptureReading != "" ? lastCaptureReading + " kWh" : "ประมวลผลสำเร็จ") + "</div>"
+                "<div style='font-size:0.8rem;color:#cbd5e1;'>" + lastCaptureMsg + "</div>"
+                "<div style='margin-top:8px;'><a href='" + serverUrl + "/api/meter/image/last' target='_blank' style='color:#38bdf8;font-size:0.85rem;text-decoration:underline;'>🖼️ คลิกเปิดดูภาพล่าสุดที่เซิร์ฟเวอร์บันทึกไว้</a></div>"
+                "</div>";
+      }
+
+      html += "<a href='/capture' class='btn btn-primary'>📸 ถ่ายรูปสแกนส่ง Spring Boot เดี๋ยวนี้</a>"
+              "<a href='/toggle-rotate' class='btn btn-rotate'>🔄 หมุนภาพ 180° (แก้กล้องกลับหัว)</a>"
+              
+              "<div class='btn-grid'>"
+              "<a href='/toggle-flash' class='btn " + String(flashState ? "btn-warning" : "btn-secondary") + "'>💡 " + String(flashState ? "ปิดไฟ Flash" : "เปิดไฟ Flash") + "</a>"
+              "<a href='/toggle-mode' class='btn btn-secondary'>⚙️ สลับโหมด (" + workMode + ")</a>"
+              "</div>"
+
+              "<div class='btn-grid'>"
+              "<a href='/toggle-vflip' class='btn btn-secondary' style='font-size:0.85rem;'>↕️ พลิกบน-ล่าง (" + String(isVflip ? "ON" : "OFF") + ")</a>"
+              "<a href='/toggle-hmirror' class='btn btn-secondary' style='font-size:0.85rem;'>↔️ พลิกซ้าย-ขวา (" + String(isHmirror ? "ON" : "OFF") + ")</a>"
+              "</div>"
+
+              "<div class='info-box'>"
+              "🌐 <b>Spring Boot Server:</b> <a href='" + serverUrl + "' target='_blank' style='color:#00f2fe;text-decoration:none;'>" + serverUrl + "</a><br>"
+              "🆔 <b>Device ID:</b> " + customDeviceId + " | ⚙️ <b>โหมด:</b> " + targetMode +
+              "</div>"
+
+              "<div style='text-align:center;font-size:0.85rem;'>"
+              "<a href='/log' style='color:#94a3b8;margin-right:14px;'>ดู System Log</a> | "
+              "<a href='" + serverUrl + "' target='_blank' style='color:#00f2fe;margin-right:14px;'>🌐 เปิด Dashboard หลัก</a> | "
+              "<a href='/reset-ap' style='color:#ef4444;'>ตั้งค่า Wi-Fi ใหม่</a>"
+              "</div>"
+
+              "<script>"
+              "let img = document.getElementById('liveImg');"
+              "let fpsSpan = document.getElementById('fpsCounter');"
+              "let isUpdating = false;"
+              "let frameCount = 0;"
+              "let lastTime = Date.now();"
+              "function loadStreamFrame() {"
+              "  if (isUpdating) return;"
+              "  isUpdating = true;"
+              "  let nextImg = new Image();"
+              "  nextImg.src = '/stream?t=' + Date.now();"
+              "  nextImg.onload = function() {"
+              "    img.src = nextImg.src;"
+              "    isUpdating = false;"
+              "    frameCount++;"
+              "    let now = Date.now();"
+              "    if (now - lastTime >= 1500) {"
+              "      let fps = (frameCount / ((now - lastTime) / 1000)).toFixed(1);"
+              "      if (fpsSpan) fpsSpan.innerText = fps;"
+              "      frameCount = 0;"
+              "      lastTime = now;"
+              "    }"
+              "    setTimeout(loadStreamFrame, 150);"
+              "  };"
+              "  nextImg.onerror = function() {"
+              "    isUpdating = false;"
+              "    setTimeout(loadStreamFrame, 1000);"
+              "  };"
+              "}"
+              "setTimeout(loadStreamFrame, 200);"
+              "</script>"
+
+              "</div></body></html>";
       server.send(200, "text/html; charset=UTF-8", html);
     });
 
-    // Endpoint ถ่ายภาพสดสำหรับส่องมุมมองหน้าปัดมิเตอร์
+    // Endpoint ถ่ายภาพสดสำหรับส่องมุมมองหน้าปัดมิเตอร์ (Real-time Viewfinder)
     server.on("/stream", HTTP_GET, handleJpgStream);
 
     // Manual Capture Trigger Endpoint
@@ -184,11 +284,66 @@ void setup() {
       }
       addLog("--- Manual Capture Requested via Web Dashboard ---");
       bool ok = captureAndSendPhoto();
+      String serverUrl = "http://" + customServerIP + ":" + String(customServerPort);
       String msg = ok ? "✅ ถ่ายรูปสแกนส่ง Spring Boot สำเร็จ!" : "❌ ไม่สามารถส่งภาพไปที่ Spring Boot ได้ (เช็กการเชื่อมต่อ Server)";
-      String html = "<html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='3;url=/'></head>"
-                    "<body style='background:#0f172a;color:#fff;font-family:sans-serif;text-align:center;padding:40px;'>"
-                    "<h2>" + msg + "</h2><p style='color:#94a3b8;'>กำลังกลับไปที่หน้าหลักใน 3 วินาที...</p></body></html>";
+      
+      String html = "<!DOCTYPE html><html lang='th'><head><meta charset='UTF-8'>"
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                    "<title>📸 ผลการถ่ายภาพมิเตอร์</title>"
+                    "<style>"
+                    "body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#fff;padding:20px;text-align:center;display:flex;justify-content:center;margin:0;}"
+                    ".card{background:#1e293b;border-radius:20px;padding:24px;max-width:480px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);}"
+                    ".reading{font-size:2rem;font-weight:bold;color:#00f2fe;margin:12px 0;}"
+                    ".btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:1rem;font-weight:bold;cursor:pointer;margin-bottom:10px;text-decoration:none;box-sizing:border-box;}"
+                    ".btn-primary{background:linear-gradient(135deg,#00f2fe,#4facfe);color:#0f172a;}"
+                    ".btn-secondary{background:#334155;color:#fff;}"
+                    "img.preview{width:100%;max-height:260px;object-fit:contain;border-radius:12px;border:1px solid #334155;margin:12px 0;background:#000;}"
+                    "</style></head><body><div class='card'>"
+                    "<h2>" + msg + "</h2>";
+
+      if (lastCaptureReading != "") {
+        html += "<div class='reading'>⚡ " + lastCaptureReading + " kWh</div>"
+                "<p style='color:#94a3b8;'>ห้อง <b>" + customRoomNumber + "</b> | บันทึกลงฐานข้อมูลเรียบร้อย</p>";
+      }
+
+      html += "<p style='color:#cbd5e1;font-size:0.9rem;'>🖼️ ภาพที่เซิร์ฟเวอร์ Spring Boot ได้รับและบันทึกไว้:</p>"
+              "<img src='" + serverUrl + "/api/meter/image/last?t=" + String(millis()) + "' class='preview' alt='Captured Meter Photo'>"
+              "<a href='/' class='btn btn-primary'>⬅️ กลับไปหน้าเล็งมุมกล้อง</a>"
+              "<a href='" + serverUrl + "' target='_blank' class='btn btn-secondary'>🌐 เปิดหน้าหลักระบบ Meter Digital</a>"
+              "</div></body></html>";
+
       server.send(200, "text/html; charset=UTF-8", html);
+    });
+
+    // ปุ่มลัดหมุนภาพ 180 องศา (แก้ปัญหากล้องกลับหัวในคลิกเดียว)
+    server.on("/toggle-rotate", []() {
+      isVflip = !isVflip;
+      isHmirror = !isHmirror;
+      saveConfigToNVS();
+      applyCameraOrientation();
+      addLog("Camera 180 Rotation Toggled. vflip=" + String(isVflip) + " hmirror=" + String(isHmirror));
+      server.sendHeader("Location", "/", true);
+      server.send(302, "text/plain", "");
+    });
+
+    // ปรับละเอียด: สลับพลิกบน-ล่าง (V-Flip)
+    server.on("/toggle-vflip", []() {
+      isVflip = !isVflip;
+      saveConfigToNVS();
+      applyCameraOrientation();
+      addLog("Camera V-Flip Toggled: " + String(isVflip));
+      server.sendHeader("Location", "/", true);
+      server.send(302, "text/plain", "");
+    });
+
+    // ปรับละเอียด: สลับพลิกซ้าย-ขวา (H-Mirror)
+    server.on("/toggle-hmirror", []() {
+      isHmirror = !isHmirror;
+      saveConfigToNVS();
+      applyCameraOrientation();
+      addLog("Camera H-Mirror Toggled: " + String(isHmirror));
+      server.sendHeader("Location", "/", true);
+      server.send(302, "text/plain", "");
     });
 
     // สลับเปิด/ปิดไฟ Flash LED ส่องหน้าปัด
@@ -318,22 +473,43 @@ bool initCamera() {
 }
 
 // =====================================================
-// HANDLE JPG SINGLE STREAM/SNAPSHOT FOR PREVIEW
+// HANDLE JPG STREAM / SNAPSHOT FOR LIVE VIEWFINDER
 // =====================================================
 void handleJpgStream() {
   if (!isCameraReady) {
-    server.send(500, "text/plain", "Camera not ready");
+    server.send(503, "text/plain", "Camera not ready");
     return;
   }
+
+  // Clear stale buffer in case grab_mode holds old frame
+  camera_fb_t * stale_fb = esp_camera_fb_get();
+  if (stale_fb) esp_camera_fb_return(stale_fb);
+
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
     server.send(500, "text/plain", "Camera capture failed");
     return;
   }
-  server.sendHeader("Content-Type", "image/jpeg");
-  server.sendHeader("Content-Length", String(fb->len));
-  server.sendHeader("Cache-Control", "no-cache");
-  server.sendContent((const char *)fb->buf, fb->len);
+
+  WiFiClient client = server.client();
+  if (client) {
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: image/jpeg");
+    client.println("Content-Length: " + String(fb->len));
+    client.println("Access-Control-Allow-Origin: *");
+    client.println("Cache-Control: no-cache, no-store, must-revalidate");
+    client.println("Pragma: no-cache");
+    client.println("Connection: close");
+    client.println();
+
+    uint8_t *buf = fb->buf;
+    size_t len = fb->len;
+    size_t chunk = 1024;
+    for (size_t i = 0; i < len; i += chunk) {
+      size_t toWrite = (i + chunk < len) ? chunk : (len - i);
+      client.write(buf + i, toWrite);
+    }
+  }
   esp_camera_fb_return(fb);
 }
 
@@ -343,15 +519,13 @@ void handleJpgStream() {
 bool captureAndSendPhoto() {
   if (WiFi.status() != WL_CONNECTED) {
     addLog("Wi-Fi not connected. Cannot send photo.");
+    lastCaptureMsg = "Wi-Fi ขาดการเชื่อมต่อ ไม่สามารถส่งรูปได้";
     return false;
   }
 
-  // เปิดไฟ Flash LED สั้นๆ ขณะถ่ายรูป หากไม่ได้เปิดไว้ก่อนหน้า
-  bool tempFlash = false;
-  if (FLASH_LED_PIN >= 0 && !flashState) {
-    digitalWrite(FLASH_LED_PIN, HIGH);
-    tempFlash = true;
-    delay(150);
+  // ตรวจสอบสถานะไฟแฟลช: จะเปิดเฉพาะเมื่อผู้ใช้สั่งเปิดแฟลชเท่านั้น (ป้องกันแสงสะท้อนบนฝากระจกมิเตอร์)
+  if (FLASH_LED_PIN >= 0) {
+    digitalWrite(FLASH_LED_PIN, flashState ? HIGH : LOW);
   }
 
   // Flush stale buffer frame to ensure fresh realtime image
@@ -360,12 +534,9 @@ bool captureAndSendPhoto() {
 
   camera_fb_t * fb = esp_camera_fb_get();
 
-  if (tempFlash && FLASH_LED_PIN >= 0) {
-    digitalWrite(FLASH_LED_PIN, LOW);
-  }
-
   if (!fb) {
     addLog("Camera Capture Failed!");
+    lastCaptureMsg = "บันทึกภาพจากเซนเซอร์กล้องไม่สำเร็จ";
     return false;
   }
 
@@ -377,6 +548,7 @@ bool captureAndSendPhoto() {
 
   if (!client.connect(serverHost.c_str(), serverPortNum)) {
     addLog("Failed to connect to Spring Boot Server at " + serverHost + ":" + String(serverPortNum));
+    lastCaptureMsg = "ไม่สามารถเชื่อมต่อ Server " + serverHost + ":" + String(serverPortNum);
     esp_camera_fb_return(fb);
     return false;
   }
@@ -418,8 +590,9 @@ bool captureAndSendPhoto() {
 
   unsigned long timeout = millis();
   while (client.available() == 0) {
-    if (millis() - timeout > 8000) {
+    if (millis() - timeout > 10000) {
       addLog("Timeout waiting for Spring Boot response.");
+      lastCaptureMsg = "หมดเวลาการรอผลตอบกลับจากเซิร์ฟเวอร์ (Timeout)";
       client.stop();
       return false;
     }
@@ -430,7 +603,26 @@ bool captureAndSendPhoto() {
   addLog(response.substring(0, 300));
 
   client.stop();
-  return true;
+
+  if (response.indexOf("\"success\":true") >= 0) {
+    lastCaptureStatus = "SUCCESS";
+    int rIdx = response.indexOf("\"meterReading\":");
+    if (rIdx >= 0) {
+      int start = rIdx + 15;
+      int end = response.indexOf(",", start);
+      if (end < 0) end = response.indexOf("}", start);
+      if (end > start) {
+        lastCaptureReading = response.substring(start, end);
+        lastCaptureReading.trim();
+      }
+    }
+    lastCaptureMsg = "ระบบอ่านค่าสำเร็จและบันทึกลงฐานข้อมูลแล้ว";
+    return true;
+  } else {
+    lastCaptureStatus = "FAILED";
+    lastCaptureMsg = "เซิร์ฟเวอร์แจ้งข้อผิดพลาด: ตรวจสอบ Log";
+    return false;
+  }
 }
 
 // =====================================================
@@ -447,6 +639,8 @@ void loadConfigFromNVS() {
   targetMode = prefs.getString("target_mode", targetMode);
   workMode = prefs.getString("work_mode", "MANUAL"); // ค่าเริ่มต้นเป็น MANUAL สำหรับช่วงทดสอบ
   captureIntervalMinutes = prefs.getInt("interval_min", 5);
+  isVflip = prefs.getBool("vflip", false);
+  isHmirror = prefs.getBool("hmirror", false);
   prefs.end();
 }
 
@@ -461,6 +655,8 @@ void saveConfigToNVS() {
   prefs.putString("target_mode", targetMode);
   prefs.putString("work_mode", workMode);
   prefs.putInt("interval_min", captureIntervalMinutes);
+  prefs.putBool("vflip", isVflip);
+  prefs.putBool("hmirror", isHmirror);
   prefs.end();
   addLog("Config saved to NVS Flash Memory!");
 }
