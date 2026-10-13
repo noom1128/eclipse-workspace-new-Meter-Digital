@@ -66,9 +66,9 @@ const char* AP_SSID = "ESP32-CAM-Meter-Setup";
 const char* AP_PASSWORD = "12345678";
 const IPAddress AP_IP(192, 168, 4, 1);
 
-// Dynamic Config Variables
-String wifiSsid = "";
-String wifiPassword = "";
+// Dynamic Config Variables (Default Wi-Fi Hotspot for immediate connection)
+String wifiSsid = "Galaxy A15 5G 4A21";
+String wifiPassword = "0859631128";
 String customServerIP = "10.21.72.108";
 int customServerPort = 8080;
 
@@ -630,8 +630,8 @@ bool captureAndSendPhoto() {
 // =====================================================
 void loadConfigFromNVS() {
   prefs.begin("cam_cfg", true);
-  wifiSsid = prefs.getString("ssid", "");
-  wifiPassword = prefs.getString("pass", "");
+  wifiSsid = prefs.getString("ssid", wifiSsid);
+  wifiPassword = prefs.getString("pass", wifiPassword);
   customServerIP = prefs.getString("server_ip", customServerIP);
   customServerPort = prefs.getInt("server_port", customServerPort);
   customRoomNumber = prefs.getString("room", customRoomNumber);
