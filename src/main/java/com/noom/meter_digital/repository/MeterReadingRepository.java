@@ -22,4 +22,6 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Long
     MeterReading findTopByRoomIdAndTimestampLessThanEqualOrderByTimestampDesc(Long roomId, java.time.LocalDateTime timestamp);
 
     List<MeterReading> findTop50ByOrderByTimestampDesc();
+
+    List<MeterReading> findByRoomIdOrderByTimestampDesc(Long roomId);
 }

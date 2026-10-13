@@ -24,6 +24,10 @@ public class PendingMeterPhoto {
     private Double detectedReading;
     private String rawText;
 
+    private Boolean anomalyDetected = false;
+    private String anomalyType;
+    private String warningMessage;
+
     private LocalDateTime createdAt;
     private LocalDateTime approvedAt;
 
@@ -70,4 +74,11 @@ public class PendingMeterPhoto {
 
     public LocalDateTime getApprovedAt() { return approvedAt; }
     public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+
+    public Boolean getAnomalyDetected() { return anomalyDetected; }
+    public void setAnomalyDetected(Boolean anomalyDetected) { this.anomalyDetected = anomalyDetected; }
+    public String getAnomalyType() { return anomalyType; }
+    public void setAnomalyType(String anomalyType) { this.anomalyType = anomalyType; }
+    public String getWarningMessage() { return warningMessage; }
+    public void setWarningMessage(String warningMessage) { this.warningMessage = warningMessage; }
 }

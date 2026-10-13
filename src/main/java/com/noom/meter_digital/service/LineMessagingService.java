@@ -276,19 +276,37 @@ public class LineMessagingService {
         String timeStr = photo.getCreatedAt() != null ? photo.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) : "-";
         String imgUrl = "http://10.221.143.108:8080/api/meter/image/" + photo.getPhotoId();
         String readingDisplay = photo.getDetectedReading() != null ? photo.getDetectedReading() + " kWh" : "รอประมวลผล";
+        boolean isAnomaly = Boolean.TRUE.equals(photo.getAnomalyDetected());
+
+        String headerBg = isAnomaly ? "#7f1d1d" : "#0f172a";
+        String headerTitle = isAnomaly ? "🚨 เตือนภัย AI: ตรวจพบค่ากระโดดผิดปกติ!" : "📸 ตรวจสอบรูปภาพมิเตอร์";
+        String headerTitleColor = isAnomaly ? "#fca5a5" : "#38bdf8";
+        String headerSub = isAnomaly ? escapeJson(photo.getWarningMessage() != null ? photo.getWarningMessage() : "ค่ามิเตอร์กระโดดผิดปกติ") : "คำขอจากเจ้าหน้าที่เดินจดมิเตอร์";
+
+        String warningBox = isAnomaly
+                ? ",{\"type\": \"box\", \"layout\": \"vertical\", \"backgroundColor\": \"#fee2e2\", \"cornerRadius\": \"md\", \"paddingAll\": \"md\", \"margin\": \"md\", \"contents\": ["
+                  + "  {\"type\": \"text\", \"text\": \"⚠️ AI ANOMALY ALERT\", \"weight\": \"bold\", \"color\": \"#b91c1c\", \"size\": \"xs\"},"
+                  + "  {\"type\": \"text\", \"text\": \"" + escapeJson(photo.getWarningMessage() != null ? photo.getWarningMessage() : "") + "\", \"wrap\": true, \"color\": \"#7f1d1d\", \"size\": \"xxs\", \"margin\": \"xs\"}"
+                  + "]}"
+                : "";
+
+        String approveLabel = isAnomaly
+                ? "⚠️ ยืนยันบันทึกค่านี้ (แม้ค่าจะกระโดด)"
+                : "🟢 อนุมัติ & บันทึกค่านี้ (" + readingDisplay + ")";
+        String approveColor = isAnomaly ? "#ea580c" : "#10b981";
 
         return "{"
                 + "\"type\": \"flex\","
-                + "\"altText\": \"📸 ตรวจสอบรูปภาพมิเตอร์ ห้อง " + photo.getRoomNumber() + "\","
+                + "\"altText\": \"" + (isAnomaly ? "🚨 แจ้งเตือนมิเตอร์กระโดด " : "📸 ตรวจสอบรูปภาพมิเตอร์ ") + "ห้อง " + photo.getRoomNumber() + "\","
                 + "\"contents\": {"
                 + "  \"type\": \"bubble\","
                 + "  \"header\": {"
                 + "    \"type\": \"box\","
                 + "    \"layout\": \"vertical\","
-                + "    \"backgroundColor\": \"#0f172a\","
+                + "    \"backgroundColor\": \"" + headerBg + "\","
                 + "    \"contents\": ["
-                + "      {\"type\": \"text\", \"text\": \"📸 ตรวจสอบรูปภาพมิเตอร์\", \"weight\": \"bold\", \"color\": \"#38bdf8\", \"size\": \"lg\"},"
-                + "      {\"type\": \"text\", \"text\": \"คำขอจากเจ้าหน้าที่เดินจดมิเตอร์\", \"color\": \"#94a3b8\", \"size\": \"xs\", \"margin\": \"xs\"}"
+                + "      {\"type\": \"text\", \"text\": \"" + headerTitle + "\", \"weight\": \"bold\", \"color\": \"" + headerTitleColor + "\", \"size\": \"md\"},"
+                + "      {\"type\": \"text\", \"text\": \"" + headerSub + "\", \"wrap\": true, \"color\": \"#94a3b8\", \"size\": \"xs\", \"margin\": \"xs\"}"
                 + "    ]"
                 + "  },"
                 + "  \"body\": {"
@@ -300,8 +318,8 @@ public class LineMessagingService {
                 + "        {\"type\": \"text\", \"text\": \"ห้อง " + photo.getRoomNumber() + "\", \"size\": \"md\", \"weight\": \"bold\", \"color\": \"#1e293b\", \"flex\": 4}"
                 + "      ]},"
                 + "      {\"type\": \"box\", \"layout\": \"baseline\", \"margin\": \"md\", \"contents\": ["
-                + "        {\"type\": \"text\", \"text\": \"⚡ อ่านได้ (OCR):\", \"size\": \"sm\", \"color\": \"#059669\", \"flex\": 2},"
-                + "        {\"type\": \"text\", \"text\": \"" + readingDisplay + "\", \"size\": \"md\", \"weight\": \"bold\", \"color\": \"#10b981\", \"flex\": 4}"
+                + "        {\"type\": \"text\", \"text\": \"⚡ อ่านได้ (OCR):\", \"size\": \"sm\", \"color\": \"" + (isAnomaly ? "#dc2626" : "#059669") + "\", \"flex\": 2},"
+                + "        {\"type\": \"text\", \"text\": \"" + readingDisplay + "\", \"size\": \"md\", \"weight\": \"bold\", \"color\": \"" + (isAnomaly ? "#dc2626" : "#10b981") + "\", \"flex\": 4}"
                 + "      ]},"
                 + "      {\"type\": \"box\", \"layout\": \"baseline\", \"margin\": \"md\", \"contents\": ["
                 + "        {\"type\": \"text\", \"text\": \"⏱️ เวลาถ่าย:\", \"size\": \"sm\", \"color\": \"#64748b\", \"flex\": 2},"
@@ -310,9 +328,10 @@ public class LineMessagingService {
                 + "      {\"type\": \"box\", \"layout\": \"baseline\", \"margin\": \"md\", \"contents\": ["
                 + "        {\"type\": \"text\", \"text\": \"🆔 ID รูป:\", \"size\": \"sm\", \"color\": \"#64748b\", \"flex\": 2},"
                 + "        {\"type\": \"text\", \"text\": \"" + photo.getPhotoId() + "\", \"size\": \"xs\", \"color\": \"#0284c7\", \"flex\": 4}"
-                + "      ]},"
-                + "      {\"type\": \"separator\", \"margin\": \"lg\"},"
-                + "      {\"type\": \"text\", \"text\": \"โปรดเปิดดูรูปเพื่อตรวจสอบ หากถูกต้องกด 'อนุมัติ & บันทึกค่านี้' เพื่อบันทึกลงระบบทันที\", \"wrap\": true, \"color\": \"#475569\", \"size\": \"xs\", \"margin\": \"md\"}"
+                + "      ]}"
+                + warningBox
+                + ",      {\"type\": \"separator\", \"margin\": \"lg\"},"
+                + "      {\"type\": \"text\", \"text\": \"โปรดเปิดดูรูปเพื่อตรวจสอบ หากถูกต้องกดปุ่มอนุมัติ หรือกดปฏิเสธเพื่อให้ถ่ายใหม่\", \"wrap\": true, \"color\": \"#475569\", \"size\": \"xs\", \"margin\": \"md\"}"
                 + "    ]"
                 + "  },"
                 + "  \"footer\": {"
@@ -333,10 +352,10 @@ public class LineMessagingService {
                 + "      {"
                 + "        \"type\": \"button\","
                 + "        \"style\": \"primary\","
-                + "        \"color\": \"#10b981\","
+                + "        \"color\": \"" + approveColor + "\","
                 + "        \"action\": {"
                 + "          \"type\": \"postback\","
-                + "          \"label\": \"🟢 อนุมัติ & บันทึกค่านี้ (" + readingDisplay + ")\","
+                + "          \"label\": \"" + approveLabel + "\","
                 + "          \"data\": \"action=APPROVE_OCR&photoId=" + photo.getPhotoId() + "\","
                 + "          \"displayText\": \"อนุมัติค่ามิเตอร์ " + readingDisplay + " ห้อง " + photo.getRoomNumber() + "\""
                 + "        }"

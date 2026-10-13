@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.noom.meter_digital.dto.InvoiceRequest;
 import com.noom.meter_digital.entity.Invoice;
+import com.noom.meter_digital.entity.MeterReplacement;
 import com.noom.meter_digital.service.BillingService;
 
 @RestController
@@ -46,4 +47,15 @@ public class BillingController {
 
     @PostMapping("/invoices/{id}/mark-paid")
     public Invoice markPaid(@PathVariable Long id) { return billing.markPaid(id); }
+
+    @PostMapping("/meter-replacement")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MeterReplacement recordMeterReplacement(@RequestBody MeterReplacement replacement) {
+        return billing.recordMeterReplacement(replacement);
+    }
+
+    @GetMapping("/meter-replacement/{roomId}")
+    public List<MeterReplacement> getMeterReplacements(@PathVariable Long roomId) {
+        return billing.getMeterReplacements(roomId);
+    }
 }

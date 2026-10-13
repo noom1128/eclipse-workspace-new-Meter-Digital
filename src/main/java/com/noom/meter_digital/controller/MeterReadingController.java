@@ -54,6 +54,9 @@ public class MeterReadingController {
     @Autowired
     private GatewayDeviceRepository deviceRepository;
 
+    @Autowired
+    private com.noom.meter_digital.service.MeterAnomalyService anomalyService;
+
     @PostMapping(value = "/ocr-scan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Map<String, Object> ocrScan(@RequestParam("file") MultipartFile file) {
         return ocrService.processMeterPhotoOffline(file);
@@ -64,6 +67,19 @@ public class MeterReadingController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "apiKey", required = false) String apiKey) {
         return ocrService.processMeterPhotoCloudAI(file, apiKey);
+    }
+
+    @GetMapping("/check-anomaly")
+    public Map<String, Object> checkAnomaly(
+            @RequestParam String roomNumber,
+            @RequestParam(required = false) Double reading,
+            @RequestParam(required = false) Double currentValue,
+            @RequestParam(required = false) String detectedRoomTag) {
+        Double val = (reading != null) ? reading : currentValue;
+        if (val == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Parameter 'reading' or 'currentValue' is required");
+        }
+        return anomalyService.analyzeReading(roomNumber, val, detectedRoomTag).toMap();
     }
 
     /**
@@ -78,7 +94,8 @@ public class MeterReadingController {
             @RequestParam(value = "targetMode", defaultValue = "DIRECT_OCR") String targetMode,
             @RequestParam(value = "manualReading", required = false) Double manualReading,
             @RequestParam(value = "useCloudAI", required = false) Boolean useCloudAI,
-            @RequestParam(value = "apiKey", required = false) String apiKey) {
+            @RequestParam(value = "apiKey", required = false) String apiKey,
+            @RequestParam(value = "forceConfirm", defaultValue = "false") Boolean forceConfirm) {
 
         Map<String, Object> result = new HashMap<>();
 
@@ -105,6 +122,7 @@ public class MeterReadingController {
                 // Run OCR immediately or use manual override if technician edited it
                 Double detectedReading = manualReading;
                 String rawText = manualReading != null ? manualReading.toString() : "";
+                String detectedRoomTag = null;
 
                 if (detectedReading == null) {
                     Map<String, Object> ocrRes = effectiveCloud ? ocrService.processMeterPhotoCloudAI(targetPath, apiKey) : ocrService.processMeterPhoto(targetPath);
@@ -112,7 +130,12 @@ public class MeterReadingController {
                         detectedReading = ((Number) ocrRes.get("meterReading")).doubleValue();
                     }
                     rawText = (String) ocrRes.getOrDefault("rawText", "");
+                    detectedRoomTag = (String) ocrRes.get("detectedRoomTag");
                 }
+
+                // AI Anomaly & Wrong Room Verification Check
+                com.noom.meter_digital.service.MeterAnomalyService.AnomalyResult anomaly =
+                        anomalyService.analyzeReading(cleanedRoom, detectedReading, detectedRoomTag);
 
                 PendingMeterPhoto pendingPhoto = new PendingMeterPhoto(
                         photoId,
@@ -122,6 +145,9 @@ public class MeterReadingController {
                 );
                 pendingPhoto.setDetectedReading(detectedReading);
                 pendingPhoto.setRawText(rawText);
+                pendingPhoto.setAnomalyDetected(anomaly.isAnomalyDetected());
+                pendingPhoto.setAnomalyType(anomaly.getAnomalyType());
+                pendingPhoto.setWarningMessage(anomaly.getWarningMessage());
                 pendingPhotoRepository.save(pendingPhoto);
 
                 // Dispatch LINE Flex Message with Interactive Buttons & OCR Reading Value
@@ -133,6 +159,11 @@ public class MeterReadingController {
                 result.put("roomNumber", cleanedRoom);
                 result.put("detectedReading", detectedReading);
                 result.put("rawText", rawText);
+                result.put("anomalyDetected", anomaly.isAnomalyDetected());
+                result.put("anomalyType", anomaly.getAnomalyType());
+                result.put("warningMessage", anomaly.getWarningMessage());
+                result.put("previousReading", anomaly.getPreviousReading());
+                result.put("deltaUnits", anomaly.getDeltaUnits());
                 result.put("message", lineRes.get("message"));
                 result.put("simulated", lineRes.get("simulated"));
                 result.put("flexPayload", lineRes.get("flexPayload"));
@@ -156,6 +187,25 @@ public class MeterReadingController {
                 Double readingVal = 0.0;
                 if (ocrResult.get("meterReading") instanceof Number) {
                     readingVal = ((Number) ocrResult.get("meterReading")).doubleValue();
+                }
+
+                String detectedRoomTag = (String) ocrResult.get("detectedRoomTag");
+                com.noom.meter_digital.service.MeterAnomalyService.AnomalyResult anomaly =
+                        anomalyService.analyzeReading(cleanedRoom, readingVal, detectedRoomTag);
+
+                ocrResult.put("anomalyDetected", anomaly.isAnomalyDetected());
+                ocrResult.put("anomalyType", anomaly.getAnomalyType());
+                ocrResult.put("warningMessage", anomaly.getWarningMessage());
+                ocrResult.put("previousReading", anomaly.getPreviousReading());
+                ocrResult.put("deltaUnits", anomaly.getDeltaUnits());
+                ocrResult.put("suggestedReading", anomaly.getSuggestedReading());
+
+                // Safety Interlock: If anomaly is detected and forceConfirm is false, require confirmation
+                if (anomaly.isAnomalyDetected() && !Boolean.TRUE.equals(forceConfirm)) {
+                    ocrResult.put("savedToDb", false);
+                    ocrResult.put("requiresConfirmation", true);
+                    ocrResult.put("message", anomaly.getWarningMessage());
+                    return ocrResult;
                 }
 
                 // Auto save to DB
@@ -251,6 +301,63 @@ public class MeterReadingController {
     @GetMapping
     public List<MeterReading> getAll() {
         return repository.findTop50ByOrderByTimestampDesc();
+    }
+
+    @GetMapping("/history")
+    public List<MeterReading> getHistory(
+            @RequestParam(required = false) Long roomId,
+            @RequestParam(required = false) String roomNumber) {
+        if (roomId != null) {
+            return repository.findByRoomIdOrderByTimestampDesc(roomId);
+        }
+        if (roomNumber != null && !roomNumber.isBlank()) {
+            Room room = roomRepository.findAllByRoomNumberOrderByIdAsc(roomNumber.trim()).stream()
+                    .findFirst().orElse(null);
+            if (room != null) {
+                return repository.findByRoomIdOrderByTimestampDesc(room.getId());
+            }
+        }
+        return repository.findTop50ByOrderByTimestampDesc();
+    }
+
+    @PutMapping("/{id}")
+    public MeterReading updateMeterReading(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        MeterReading reading = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meter reading not found"));
+
+        if (body.containsKey("unit") && body.get("unit") != null) {
+            Double unit = ((Number) body.get("unit")).doubleValue();
+            reading.setUnit(unit);
+            reading.setEnergy(unit);
+            reading.setValue(unit);
+            reading.setMetervalue(unit);
+        }
+        if (body.containsKey("timestamp") && body.get("timestamp") != null) {
+            try {
+                reading.setTimestamp(LocalDateTime.parse((String) body.get("timestamp")));
+            } catch (Exception ignored) {}
+        }
+        if (body.containsKey("voltage") && body.get("voltage") != null) {
+            reading.setVoltage(((Number) body.get("voltage")).doubleValue());
+        }
+        if (body.containsKey("current") && body.get("current") != null) {
+            reading.setCurrent(((Number) body.get("current")).doubleValue());
+        }
+        if (body.containsKey("power") && body.get("power") != null) {
+            reading.setPower(((Number) body.get("power")).doubleValue());
+        }
+        return repository.save(reading);
+    }
+
+    @DeleteMapping("/{id}")
+    public Map<String, Object> deleteMeterReading(@PathVariable Long id) {
+        MeterReading reading = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meter reading not found"));
+        repository.delete(reading);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("deletedId", id);
+        return res;
     }
 
     @GetMapping("/latest")

@@ -19,9 +19,11 @@ import com.noom.meter_digital.dto.AdditionalChargeRequest;
 import com.noom.meter_digital.entity.Invoice;
 import com.noom.meter_digital.entity.InvoiceCharge;
 import com.noom.meter_digital.entity.MeterReading;
+import com.noom.meter_digital.entity.MeterReplacement;
 import com.noom.meter_digital.entity.Room;
 import com.noom.meter_digital.repository.InvoiceRepository;
 import com.noom.meter_digital.repository.MeterReadingRepository;
+import com.noom.meter_digital.repository.MeterReplacementRepository;
 import com.noom.meter_digital.repository.RoomRepository;
 
 @Service
@@ -29,11 +31,14 @@ public class BillingService {
     private final MeterReadingRepository meterReadings;
     private final RoomRepository rooms;
     private final InvoiceRepository invoices;
+    private final MeterReplacementRepository meterReplacements;
 
-    public BillingService(MeterReadingRepository meterReadings, RoomRepository rooms, InvoiceRepository invoices) {
+    public BillingService(MeterReadingRepository meterReadings, RoomRepository rooms,
+                          InvoiceRepository invoices, MeterReplacementRepository meterReplacements) {
         this.meterReadings = meterReadings;
         this.rooms = rooms;
         this.invoices = invoices;
+        this.meterReplacements = meterReplacements;
     }
 
     public Map<String, Object> preview(Long roomId, String billingMonth, Double openingOverride,
@@ -61,6 +66,24 @@ public class BillingService {
         );
 
         double electricityUnits = elecCalc.getUnitsUsed();
+
+        // Check for any meter replacement / reset in this billing month
+        List<MeterReplacement> replacements = meterReplacements.findByRoomIdAndReplacedDateBetween(
+                roomId, month.atDay(1), month.atEndOfMonth()
+        );
+        boolean replacementDetected = !replacements.isEmpty();
+        String replacementNote = null;
+        if (replacementDetected) {
+            MeterReplacement rep = replacements.get(0);
+            double oldFinal = rep.getOldMeterFinalReading() != null ? rep.getOldMeterFinalReading() : opening;
+            double oldUnits = Math.max(0.0, oldFinal - opening);
+            double newInitial = rep.getNewMeterInitialReading() != null ? rep.getNewMeterInitialReading() : 0.0;
+            double newUnits = Math.max(0.0, closing - newInitial);
+            electricityUnits = Math.round((oldUnits + newUnits) * 100.0) / 100.0;
+            replacementNote = String.format("มีการเปลี่ยน/รีเซ็ตมิเตอร์: มิเตอร์เดิม (%.1f → %.1f = %.1f หน่วย) + มิเตอร์ใหม่ (%.1f → %.1f = %.1f หน่วย)",
+                    opening, oldFinal, oldUnits, newInitial, closing, newUnits);
+        }
+
         double electricityRate = valueOrZero(room.getRatePerUnit());
         double water = valueOrZero(waterUnits);
         double waterRate = waterRateOverride == null ? valueOrZero(room.getWaterRatePerUnit()) : waterRateOverride;
@@ -68,7 +91,7 @@ public class BillingService {
         if (waterRate < 0 || rent < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rent and water rate must not be negative");
         }
-        double electricityAmount = elecCalc.getTotalAmount();
+        double electricityAmount = round(electricityUnits * electricityRate);
         double waterAmount = round(water * waterRate);
         List<Map<String, Object>> additionalCharges = normalizedCharges(requestedCharges);
         double additionalAmount = additionalCharges.stream()
@@ -96,6 +119,8 @@ public class BillingService {
         result.put("totalAmount", subtotal);
         result.put("rolloverDetected", elecCalc.isRolloverDetected());
         result.put("warning", elecCalc.getWarningMessage());
+        result.put("meterReplaced", replacementDetected);
+        result.put("replacementNote", replacementNote);
         return result;
     }
 
@@ -147,6 +172,22 @@ public class BillingService {
         invoice.setStatus("PAID");
         invoice.setPaidAt(LocalDateTime.now());
         return invoices.save(invoice);
+    }
+
+    public MeterReplacement recordMeterReplacement(MeterReplacement replacement) {
+        if (replacement.getRoomId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "roomId is required");
+        }
+        Room room = getRoom(replacement.getRoomId());
+        replacement.setRoomNumber(room.getRoomNumber());
+        if (replacement.getReplacedDate() == null) {
+            replacement.setReplacedDate(LocalDate.now());
+        }
+        return meterReplacements.save(replacement);
+    }
+
+    public List<MeterReplacement> getMeterReplacements(Long roomId) {
+        return meterReplacements.findByRoomIdOrderByReplacedDateDesc(roomId);
     }
 
     private Room getRoom(Long roomId) {

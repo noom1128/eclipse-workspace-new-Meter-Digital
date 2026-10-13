@@ -653,9 +653,15 @@
 
             <!-- Live Readings Table -->
             <div class="card table-card">
-                <div class="card-header">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div class="card-title"><i class="fas fa-list-alt" style="color: var(--cyan-main);"></i> Meter Reading Logs (/api/meter)</div>
-                    <span style="font-size: 11px; color: var(--text-muted);">Auto Updated</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <label style="font-size:12px; color:var(--text-muted);">เลือกห้อง:</label>
+                        <select id="dashboard-room-filter" onchange="fetchTableLogs()" style="background:#0e1627;color:#fff;border:1px solid var(--border-color);border-radius:6px;padding:4px 8px;font-size:12px;">
+                            <option value="">ทุกห้อง (All)</option>
+                        </select>
+                        <span style="font-size: 11px; color: var(--text-muted);">Auto Updated</span>
+                    </div>
                 </div>
                 <table class="meter-table">
                     <thead>
@@ -817,7 +823,10 @@
 
         async function fetchTableLogs() {
             try {
-                const res = await fetch(API_BASE, { headers: authHeaders() });
+                const filter = document.getElementById('dashboard-room-filter');
+                const roomNum = filter ? filter.value : '';
+                const url = roomNum ? `${API_BASE}/history?roomNumber=${encodeURIComponent(roomNum)}` : API_BASE;
+                const res = await fetch(url, { headers: authHeaders() });
                 if (res.ok) {
                     const list = await res.json();
                     renderTable(list);
@@ -842,6 +851,15 @@
         }
 
         function renderRoomSummary(rooms) {
+            const filter = document.getElementById('dashboard-room-filter');
+            if (filter && filter.options.length <= 1) {
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.roomNumber;
+                    opt.textContent = `ห้อง ${r.roomNumber}`;
+                    filter.appendChild(opt);
+                });
+            }
             const grid = document.getElementById('room-meter-grid');
             grid.innerHTML = rooms.map(room => {
                 const hasReading = room.timestamp;

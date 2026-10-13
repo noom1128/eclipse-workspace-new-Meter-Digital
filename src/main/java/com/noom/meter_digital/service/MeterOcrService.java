@@ -857,16 +857,17 @@ public class MeterOcrService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String prompt = "You are an expert utility meter reader. Read the counter digits of this electricity/water meter. "
-                    + "If the photo appears upside down, tilted, or inverted, automatically determine the correct upright orientation and read the digits properly. "
-                    + "Most analog meters have 4 or 5 black digits for integer kWh, and optionally 1 red digit (or framed in red on the far right) for tenths of a kWh (decimal fraction 0.1). "
-                    + "Return ONLY the final numeric reading (e.g. 8491 or 8491.4). If the last digit is in red or framed in red, format it with a decimal point (e.g. 8491.4). "
-                    + "Do not include any words, letters, symbols or units. Just the number.";
+            String prompt = "You are an expert utility meter reader. Analyze this electricity/water meter photo.\n"
+                    + "1. Automatically determine the correct upright orientation if rotated or upside down.\n"
+                    + "2. Read the counter digits: Most meters have 4 or 5 black digits for integer kWh, and optionally 1 red digit (or framed in red on the far right) for tenths of a kWh (0.1 decimal fraction).\n"
+                    + "3. Look for any room number, label, or handwritten sticker near or on the meter (e.g. '101', '102', 'ห้อง 101', etc.).\n"
+                    + "Respond in valid JSON format: {\"reading\": 8491.0, \"detectedRoomTag\": \"101\"}.\n"
+                    + "If no room tag is visible, set \"detectedRoomTag\": null. Return ONLY the JSON object.";
 
             String requestBody = "{"
                     + "\"contents\": [{"
                     + "  \"parts\": ["
-                    + "    {\"text\": \"" + prompt.replace("\"", "\\\"") + "\"},"
+                    + "    {\"text\": \"" + prompt.replace("\"", "\\\"").replace("\n", "\\n") + "\"},"
                     + "    {\"inline_data\": {\"mime_type\": \"image/jpeg\", \"data\": \"" + base64Image + "\"}}"
                     + "  ]"
                     + "}]"
@@ -878,6 +879,12 @@ public class MeterOcrService {
 
             String extractedText = parseGeminiResponse(response);
             if (extractedText != null && !extractedText.isBlank()) {
+                String detectedRoomTag = null;
+                Matcher roomMatcher = Pattern.compile("\"detectedRoomTag\"\\s*:\\s*\"([^\"]+)\"").matcher(extractedText);
+                if (roomMatcher.find()) {
+                    detectedRoomTag = roomMatcher.group(1).trim();
+                }
+
                 Matcher m = Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(extractedText);
                 if (m.find()) {
                     String numStr = m.group(1);
@@ -885,10 +892,11 @@ public class MeterOcrService {
                     result.put("success", true);
                     result.put("meterReading", val);
                     result.put("rawText", numStr);
+                    result.put("detectedRoomTag", detectedRoomTag);
                     result.put("confidence", "99.9% (Cloud AI " + model + ")");
                     result.put("engineMode", "CLOUD_AI");
                     result.put("savedPath", targetPath.toString());
-                    result.put("message", "✨ Cloud AI สแกนแม่นยำ 99.9%: อ่านได้ " + numStr + " kWh");
+                    result.put("message", "✨ Cloud AI สแกนแม่นยำ 99.9%: อ่านได้ " + numStr + " kWh" + (detectedRoomTag != null ? " [ป้ายห้อง: " + detectedRoomTag + "]" : ""));
                     return result;
                 }
             }
