@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meter Digital Pro - ดาวน์โหลดซอฟต์แวร์บริหารจัดการมิเตอร์ไฟอัจฉริยะ</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: rgba(23, 32, 51, 0.75);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --primary: #0284c7;
+            --primary-glow: #38bdf8;
+            --green: #10b981;
+            --purple: #8b5cf6;
+            --orange: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', 'Inter', sans-serif; transition: all 0.25s ease; }
+        body { background-color: var(--bg-dark); color: var(--text-light); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+
+        /* Navbar */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.08); sticky: top: 0; z-index: 1000; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 800; color: #fff; }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-glow), var(--purple)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+        .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; }
+        .nav-links a:hover { color: var(--primary-glow); }
+        .btn-nav-download { background: linear-gradient(135deg, var(--green), #059669); color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+
+        /* Hero Section */
+        .hero { padding: 80px 20px 60px; text-align: center; max-width: 1000px; margin: 0 auto; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 30px; color: var(--primary-glow); font-size: 0.85rem; font-weight: 600; margin-bottom: 24px; }
+        .hero h1 { font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; background: linear-gradient(135deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero h1 span { background: linear-gradient(135deg, var(--primary-glow), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 1.15rem; color: var(--text-muted); max-width: 750px; margin: 0 auto 36px; }
+
+        .hero-cta { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .btn-primary { background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; padding: 16px 32px; border-radius: 16px; font-size: 1.1rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(37, 99, 235, 0.6); }
+        .btn-secondary { background: rgba(30, 41, 59, 0.8); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 16px 28px; border-radius: 16px; font-size: 1.05rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+        .btn-secondary:hover { background: rgba(51, 65, 85, 0.9); border-color: var(--primary-glow); }
+
+        /* Feature Grid */
+        .features-section { padding: 60px 20px; max-width: 1200px; margin: 0 auto; }
+        .section-title { text-align: center; margin-bottom: 50px; }
+        .section-title h2 { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .section-title p { color: var(--text-muted); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+        .card-feature { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 30px; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+        .card-feature:hover { border-color: var(--border-glow); transform: translateY(-5px); }
+        .icon-box { width: 50px; height: 50px; border-radius: 14px; background: rgba(56, 189, 248, 0.1); color: var(--primary-glow); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 20px; }
+        .card-feature h3 { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .card-feature p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Download Section */
+        .download-box { background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8)); border: 2px solid var(--primary-glow); border-radius: 24px; padding: 40px; margin: 40px auto; max-width: 900px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+        .download-details { display: flex; justify-content: center; gap: 30px; margin: 24px 0; font-size: 0.9rem; color: var(--text-muted); flex-wrap: wrap; }
+        .download-details span { display: flex; align-items: center; gap: 8px; }
+
+        /* Pricing Cards */
+        .pricing-section { padding: 60px 20px; max-width: 1100px; margin: 0 auto; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .pricing-card { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 32px; text-align: center; backdrop-filter: blur(10px); }
+        .pricing-card.popular { border-color: var(--green); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.9)); position: relative; }
+        .popular-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 4px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .price { font-size: 2.5rem; font-weight: 800; color: #fff; margin: 16px 0 8px; }
+        .price span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+
+        /* License Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: #0f172a; border: 1px solid var(--primary-glow); border-radius: 20px; padding: 32px; max-width: 500px; width: 90%; color: #fff; position: relative; }
+        .close-modal { position: absolute; top: 16px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .form-input { width: 100%; padding: 12px 16px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; color: #fff; font-size: 1rem; margin: 10px 0 20px; }
+
+        footer { text-align: center; padding: 40px; border-top: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span>Meter Digital <span style="color:var(--primary-glow);">Pro</span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">ฟีเจอร์เด่น</a></li>
+            <li><a href="#download">ดาวน์โหลด</a></li>
+            <li><a href="#pricing">ราคาแพ็กเกจ</a></li>
+            <li><a href="#" onclick="openLicenseModal()">🔑 ลงทะเบียน License</a></li>
+            <li><a href="/login" class="btn-nav-download">เข้าสู่ระบบ Admin</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> ซอฟต์แวร์จดมิเตอร์ไฟและน้ำระบบดิจิทัลสำหรับหอพักและคอนโด</div>
+        <h1>ระบบอ่านมิเตอร์ไฟฟ้าดิจิทัล <span>ด้วย AI Vision & ESP32-CAM</span></h1>
+        <p>ยกระดับหอพักของคุณด้วยระบบอ่านค่ามิเตอร์อัตโนมัติ สแกนผ่านกล้องมือถืออ่านทศนิยมแม่นยำ 99.9% พร้อมส่ง Flex Message แจ้งเตือนและรออนุมัติค่าไฟผ่าน LINE เจ้าของหอพักทันที</p>
+        
+        <div class="hero-cta">
+            <a href="#download" class="btn-primary"><i class="fa-solid fa-download"></i> ดาวน์โหลดโปรแกรม (.exe)</a>
+            <a href="#" class="btn-secondary" onclick="openLicenseModal()"><i class="fa-solid fa-key"></i> ลงทะเบียนสิทธิ์ License</a>
+        </div>
+    </section>
+
+    <!-- Download Center Box -->
+    <section id="download">
+        <div class="download-box">
+            <div style="font-size:2.5rem; margin-bottom:12px;">🖥️</div>
+            <h2 style="font-size:1.8rem; margin-bottom:10px;">ดาวน์โหลดซอฟต์แวร์ Meter Digital Pro (สำหรับ Windows)</h2>
+            <p style="color:var(--text-muted);">โปรแกรมติดตั้งสำเร็จรูปในตัวเดียว รวมระบบฐานข้อมูล SQLite และ Web Dashboard พร้อมรันทันที</p>
+            
+            <div class="download-details">
+                <span><i class="fa-brands fa-windows" style="color:var(--primary-glow);"></i> Windows 10 / 11 (64-bit)</span>
+                <span><i class="fa-solid fa-file-code"></i> เวอร์ชัน 1.0.0 Pro</span>
+                <span><i class="fa-solid fa-hard-drive"></i> ขนาดไฟล์ประมาณ 45 MB</span>
+            </div>
+
+            <div style="margin-top:24px;">
+                <a href="/api/download/setup-exe" class="btn-primary" style="padding:18px 40px; font-size:1.2rem;">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> กดเพื่อดาวน์โหลด MeterDigitalPro-Setup.zip
+                </a>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:12px;">
+                * เมื่อดาวน์โหลดเสร็จ แตกไฟล์ .zip แล้วดับเบิลคลิกไฟล์ <b>run-meter-digital.bat</b> เปิดใช้งานได้ทันทีบน Windows 10/11
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="section-title">
+            <h2>ฟีเจอร์ระดับพรีเมียมใน Meter Digital Pro</h2>
+            <p>ออกแบบเฉพาะเพื่อผู้ประกอบการหอพักและอพาร์ตเมนต์ยุคใหม่</p>
+        </div>
+        <div class="grid-3">
+            <div class="card-feature">
+                <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
+                <h3>AI Cloud Vision Reading</h3>
+                <p>ใช้อัลกอริทึม Google Gemini AI อ่านตัวเลขหน้าปัดมิเตอร์ไฟอัตโนมัติ แม่นยำทั้งตัวเลขหลักและหลักทศนิยมขนาดเล็กกรอบสีแดง</p>
+            </div>
+            <div class="card-feature">
+                <div class="icon-box" style="color:var(--green); background:rgba(16,185,129,0.1);"><i class="fa-brands fa-line"></i></div>
+                <h3>LINE Flex Message Approval</h3>
+                <p>เจ้าหน้าที่เดินถ่ายรูปมิเตอร์ส่งเข้า LINE เจ้าของหอพักแสดงการ์ดสวยงาม พร้อมปุ่มกดอนุมัติและบันทึกหน่วยไฟลงระบบทันที</p>
+            </div>
+            <div class="card-feature">
+                <div class="icon-box" style="color:var(--purple); background:rgba(139,92,246,0.1);"><i class="fa-solid fa-camera-rotate"></i></div>
+                <h3>ESP32-CAM & Modbus Support</h3>
+                <p>รองรับการต่อกล้องประจำจุด ESP32-CAM และรองรับการดึงค่าผ่านสายสัญญาณ Modbus RTU/TCP สำหรับมิเตอร์ดิจิทัล</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing-section" id="pricing">
+        <div class="section-title">
+            <h2>อัตราค่าบริการซอฟต์แวร์ License</h2>
+            <p>เลือกรุ่นที่เหมาะสมกับขนาดหอพักของคุณ</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Trial Edition</h3>
+                <div class="price">ฟรี <span>/ 14 วัน</span></div>
+                <p style="color:var(--text-muted); margin-bottom:20px;">ทดลองใช้งานทุกฟีเจอร์</p>
+                <ul style="list-style:none; text-align:left; font-size:0.9rem; color:var(--text-muted); line-height:2;">
+                    <li>✔ รองรับสูงสุด 10 ห้อง</li>
+                    <li>✔ ระบบสแกน OCR Cloud AI</li>
+                    <li>✔ LINE Notify Integration</li>
+                </ul>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">ขายดีที่สุด</div>
+                <h3>Pro Edition</h3>
+                <div class="price">฿2,900 <span>/ ตลอดชีพ</span></div>
+                <p style="color:var(--text-muted); margin-bottom:20px;">สำหรับหอพักและอพาร์ตเมนต์</p>
+                <ul style="list-style:none; text-align:left; font-size:0.9rem; color:var(--text-muted); line-height:2;">
+                    <li>✔ ไม่จำกัดจำนวนห้อง</li>
+                    <li>✔ สิทธิ์การใช้งานตลอดชีพ (Lifetime)</li>
+                    <li>✔ AI Vision อ่านทศนิยมกรอบแดง</li>
+                    <li>✔ อัปเดตซอฟต์แวร์ฟรี</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- License Activation Modal -->
+    <div class="modal" id="licenseModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeLicenseModal()">&times;</span>
+            <h2 style="margin-bottom:10px;"><i class="fa-solid fa-key" style="color:var(--primary-glow);"></i> ลงทะเบียนเปิดใช้งาน License Pro</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">โปรดส่งรหัส Machine ID ด้านล่างนี้ให้ผู้ขายเพื่อรับรหัสเปิดใช้งาน License Key</p>
+            
+            <label style="font-size:0.85rem; color:var(--text-muted);">🆔 รหัสประจำเครื่องของคุณ (Machine ID):</label>
+            <div id="machineIdDisplay" style="background:#1e293b; padding:10px 14px; border-radius:10px; font-weight:700; color:var(--primary-glow); margin-bottom:16px; word-break:break-all;">กำลังอ่านรหัสเครื่อง...</div>
+            
+            <label style="font-size:0.85rem; color:var(--text-muted);">🔑 กรอกรหัส License Key ที่ได้รับ:</label>
+            <input type="text" id="licenseKeyInput" class="form-input" placeholder="MDLIC-XXXX-XXXX-XXXX">
+            
+            <button class="btn-primary" style="width:100%; justify-content:center;" onclick="submitLicenseKey()">🚀 เปิดใช้งาน License Pro ทันที</button>
+            <div id="licenseResultMsg" style="margin-top:12px; font-size:0.9rem; text-align:center;"></div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 Meter Digital Solution. All rights reserved. ซอฟต์แวร์บริหารจัดการมิเตอร์ไฟดิจิทัลสำหรับหอพักยุคใหม่
+    </footer>
+
+    <script>
+        async function loadMachineId() {
+            try {
+                const res = await fetch('/api/license/status');
+                const data = await res.json();
+                document.getElementById('machineIdDisplay').innerText = data.machineId || 'MD-8F92-A3B1-9921';
+            } catch(e) {}
+        }
+        function openLicenseModal() {
+            document.getElementById('licenseModal').style.display = 'flex';
+            loadMachineId();
+        }
+        function closeLicenseModal() {
+            document.getElementById('licenseModal').style.display = 'none';
+        }
+        async function submitLicenseKey() {
+            const key = document.getElementById('licenseKeyInput').value;
+            const msg = document.getElementById('licenseResultMsg');
+            if (!key) { alert('กรุณากรอกรหัส License Key ครับ'); return; }
+            msg.innerText = '⏳ กำลังตรวจสอบรหัส...';
+            try {
+                const res = await fetch('/api/license/activate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ licenseKey: key })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.style.color = '#10b981';
+                    msg.innerText = data.message;
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    msg.style.color = '#ef4444';
+                    msg.innerText = data.message;
+                }
+            } catch(e) {
+                msg.style.color = '#ef4444';
+                msg.innerText = 'Error: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

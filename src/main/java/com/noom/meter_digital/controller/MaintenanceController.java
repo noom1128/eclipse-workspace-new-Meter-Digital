@@ -45,6 +45,11 @@ public class MaintenanceController {
             if (device.getWifiPassword() != null) existing.setWifiPassword(device.getWifiPassword());
             if (device.getReadIntervalMs() != null) existing.setReadIntervalMs(device.getReadIntervalMs());
             if (device.getActiveMeterModel() != null) existing.setActiveMeterModel(device.getActiveMeterModel());
+            if (device.getReaderMode() != null) existing.setReaderMode(device.getReaderMode());
+            if (device.getPort() != null) existing.setPort(device.getPort());
+            if (device.getSlaveId() != null) existing.setSlaveId(device.getSlaveId());
+            if (device.getPollingIntervalSeconds() != null) existing.setPollingIntervalSeconds(device.getPollingIntervalSeconds());
+            if (device.getTargetRoomNumber() != null) existing.setTargetRoomNumber(device.getTargetRoomNumber());
             if (device.getMeterMappingJson() != null) existing.setMeterMappingJson(device.getMeterMappingJson());
             existing.setStatus("ONLINE");
             existing.setLastHeartbeat(LocalDateTime.now());

@@ -1,0 +1,38 @@
+{
+  "modelKey" : "MODEL_A",
+  "brand" : "Generic",
+  "modelName" : "Standard Modbus Float Meter A",
+  "description" : "Default standard float register map starting at Reg 0 (FC 0x04)",
+  "defaultFunctionCode" : 4,
+  "defaultProtocolMode" : "AUTO",
+  "registerMappings" : [ {
+    "metric" : "voltage",
+    "registerAddress" : 0,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "V"
+  }, {
+    "metric" : "current",
+    "registerAddress" : 2,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "A"
+  }, {
+    "metric" : "power",
+    "registerAddress" : 4,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kW"
+  }, {
+    "metric" : "energyKwh",
+    "registerAddress" : 6,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kWh"
+  } ],
+  "builtIn" : true
+}

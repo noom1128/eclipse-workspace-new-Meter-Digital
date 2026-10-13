@@ -1,0 +1,38 @@
+{
+  "modelKey" : "EASTRON_SDM120",
+  "brand" : "Eastron",
+  "modelName" : "SDM120 Single Phase Smart Meter",
+  "description" : "Eastron SDM120 Series (Float32 CD_AB, Input Registers 0x04)",
+  "defaultFunctionCode" : 4,
+  "defaultProtocolMode" : "AUTO",
+  "registerMappings" : [ {
+    "metric" : "voltage",
+    "registerAddress" : 0,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_CD_AB",
+    "multiplier" : 1.0,
+    "unit" : "V"
+  }, {
+    "metric" : "current",
+    "registerAddress" : 6,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_CD_AB",
+    "multiplier" : 1.0,
+    "unit" : "A"
+  }, {
+    "metric" : "power",
+    "registerAddress" : 12,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_CD_AB",
+    "multiplier" : 1.0,
+    "unit" : "kW"
+  }, {
+    "metric" : "energyKwh",
+    "registerAddress" : 342,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_CD_AB",
+    "multiplier" : 1.0,
+    "unit" : "kWh"
+  } ],
+  "builtIn" : true
+}

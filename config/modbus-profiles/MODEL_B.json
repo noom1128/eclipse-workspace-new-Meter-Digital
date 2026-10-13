@@ -1,0 +1,38 @@
+{
+  "modelKey" : "MODEL_B",
+  "brand" : "Generic",
+  "modelName" : "Standard Modbus Holding Float Meter B",
+  "description" : "Default holding float register map starting at Reg 0 (FC 0x03)",
+  "defaultFunctionCode" : 3,
+  "defaultProtocolMode" : "AUTO",
+  "registerMappings" : [ {
+    "metric" : "voltage",
+    "registerAddress" : 0,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "V"
+  }, {
+    "metric" : "current",
+    "registerAddress" : 2,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "A"
+  }, {
+    "metric" : "power",
+    "registerAddress" : 4,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kW"
+  }, {
+    "metric" : "energyKwh",
+    "registerAddress" : 6,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kWh"
+  } ],
+  "builtIn" : true
+}

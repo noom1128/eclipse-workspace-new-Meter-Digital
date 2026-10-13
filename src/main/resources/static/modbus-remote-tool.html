@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>?? Remote Meter Reader & Scanner Tool - AnyDesk/TeamViewer Modbus Debugger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(22, 31, 49, 0.85);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text: #fff;
+            --text-muted: #94a3b8;
+            --primary: #00f2fe;
+            --accent: #4facfe;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(at 0% 0%, rgba(0, 242, 254, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(79, 172, 254, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container { max-width: 1200px; width: 100%; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--card-border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links { display: flex; gap: 12px; }
+
+        .btn-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            transition: all 0.2s;
+        }
+
+        .btn-link:hover { background: rgba(0, 242, 254, 0.15); border-color: var(--primary); }
+
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 12px 22px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #0f172a;
+            border-color: transparent;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+        }
+
+        .preset-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed rgba(0, 242, 254, 0.3);
+            border-radius: 14px;
+        }
+
+        .btn-preset {
+            background: #1e293b;
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-preset:hover { background: #0284c7; color: #fff; }
+
+        .btn-action {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .hex-box {
+            background: #090d16;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 1.05rem;
+            color: #00f2fe;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid var(--card-border); font-size: 0.88rem; }
+        th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+
+        .badge-match {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .loader {
+            display: none;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #00f2fe;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>?? Remote Meter Reader & Scanner Tool</h1>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">
+                    เครื่องมือสำหรับช่าง/ผู้ดูแล Remote (AnyDesk / TeamViewer) เข้าเครื่องลูกค้า เพื่อทดสอบอ่านค่า Hex, สแกน Slave ID และจับคู่ Register Map มิเตอร์รุ่นใหม่ๆ
+                </p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="btn-link">?? หน้าหลัก Dashboard</a>
+                <a href="/meter-gateway-setup" class="btn-link">?? ตั้งค่า Gateway</a>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('inspector')">?? Raw Hex & Matrix Inspector</button>
+            <button class="tab-btn" onclick="switchTab('scanner')">?? Slave ID Bus Scanner</button>
+            <button class="tab-btn" onclick="switchTab('profiles')">??? Dynamic Protocol Profiles</button>
+        </div>
+
+        <!-- TAB 1: Raw Hex & Matrix Inspector -->
+        <div id="inspector" class="panel active">
+            <div class="card">
+                <div class="card-title">?? พารามิเตอร์การอ่านค่า (Modbus Connection Settings)</div>
+                <div class="preset-bar">
+                    <span style="font-size:0.8rem; font-weight:700; color:#00f2fe; align-self:center;">? Quick Presets:</span>
+                    <button class="btn-preset" onclick="setConnectionPreset('169.254.51.66', 31, 1)">MOXA Port 31 (P1)</button>
+                    <button class="btn-preset" onclick="setConnectionPreset('169.254.51.66', 32, 1)">MOXA Port 32 (P2)</button>
+                    <button class="btn-preset" onclick="setConnectionPreset('192.168.1.200', 502, 1)">Modbus TCP (Port 502)</button>
+                    <button class="btn-preset" onclick="setConnectionPreset('127.0.0.1', 10502, 1)">?? Virtual Simulator (127.0.0.1:10502)</button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>IP Address</label>
+                        <input type="text" id="inspIp" value="169.254.51.66">
+                    </div>
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="number" id="inspPort" value="31">
+                    </div>
+                    <div class="form-group">
+                        <label>Slave ID (1-247)</label>
+                        <input type="number" id="inspSlaveId" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Function Code</label>
+                        <select id="inspFc">
+                            <option value="3">0x03 - Read Holding Registers</option>
+                            <option value="4" selected>0x04 - Read Input Registers</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Register (Dec)</label>
+                        <input type="number" id="inspStartReg" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Register Count</label>
+                        <input type="number" id="inspRegCount" value="8">
+                    </div>
+                    <div class="form-group">
+                        <label>Protocol Mode</label>
+                        <select id="inspProtocolMode">
+                            <option value="AUTO" selected>?? AUTO (RTU over TCP / TCP)</option>
+                            <option value="MODBUS_RTU_OVER_TCP">?? Modbus RTU over TCP</option>
+                            <option value="MODBUS_TCP">?? Modbus TCP Standard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-action" onclick="executeRawRead()">
+                    <span id="inspLoader" class="loader"></span>
+                    ? อ่านค่า Raw Hex & Decode Matrix
+                </button>
+            </div>
+
+            <div id="inspResultBox" style="display:none;">
+                <div class="card">
+                    <div class="card-title">?? ผลลัพธ์ Raw Hex Bytes Response</div>
+                    <div id="rawHexDump" class="hex-box"></div>
+                    <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;" id="inspMeta"></div>
+
+                    <div class="card-title" style="margin-top:20px;">?? Matrix Decoder Table (เทียบ Data Types ทุกรูปแบบ)</div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Register Index</th>
+                                    <th>Byte Offset</th>
+                                    <th>Raw Hex (4 Bytes)</th>
+                                    <th>Float32 AB-CD (Big-Endian)</th>
+                                    <th>Float32 CD-AB (Word-Swap)</th>
+                                    <th>Float32 BA-DC</th>
+                                    <th>Float32 DC-BA</th>
+                                    <th>Int32 AB-CD</th>
+                                    <th>UInt16 [0]</th>
+                                    <th>UInt16 [1]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrixTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Slave ID Bus Scanner -->
+        <div id="scanner" class="panel">
+            <div class="card">
+                <div class="card-title">?? สแกนหา Slave ID ทั้งหมดในสาย RS485 Bus</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>IP Address</label>
+                        <input type="text" id="scanIp" value="169.254.51.66">
+                    </div>
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="number" id="scanPort" value="31">
+                    </div>
+                    <div class="form-group">
+                        <label>Start Slave ID</label>
+                        <input type="number" id="scanStartSlave" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>End Slave ID</label>
+                        <input type="number" id="scanEndSlave" value="16">
+                    </div>
+                    <div class="form-group">
+                        <label>Protocol Mode</label>
+                        <select id="scanProtocolMode">
+                            <option value="AUTO" selected>AUTO</option>
+                            <option value="MODBUS_RTU_OVER_TCP">Modbus RTU over TCP</option>
+                            <option value="MODBUS_TCP">Modbus TCP</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-action" onclick="executeSlaveScan()">
+                    <span id="scanLoader" class="loader"></span>
+                    ?? เริ่มสแกนหามิเตอร์ในสาย RS485
+                </button>
+            </div>
+
+            <div id="scanResultCard" class="card" style="display:none;">
+                <div class="card-title">ผลการสแกน Slave ID (Scan Summary)</div>
+                <div id="scanSummaryText" style="margin-bottom:15px; font-weight:600; color:#34d399;"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Slave ID</th>
+                            <th>สถานะ</th>
+                            <th>Response Time</th>
+                            <th>Protocol Used</th>
+                            <th>Sample Hex</th>
+                        </tr>
+                    </thead>
+                    <tbody id="slaveTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: Dynamic Protocol Profile Manager -->
+        <div id="profiles" class="panel">
+            <div class="card">
+                <div class="card-title">??? รายการ Modbus Register Profiles ในระบบ</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span style="color:var(--text-muted); font-size:0.9rem;">ไฟล์ JSON เก็บอยู่ที่ ./config/modbus-profiles/ สามารถเพิ่มยี่ห้อใหม่ได้โดยไม่ต้องคอมไพล์ใหม่</span>
+                    <button class="btn-action" style="padding:8px 16px; font-size:0.85rem;" onclick="openNewProfileModal()">? สร้าง Profile ยี่ห้อใหม่</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model Key</th>
+                            <th>ยี่ห้อ (Brand)</th>
+                            <th>ชื่อรุ่น (Model Name)</th>
+                            <th>Function Code</th>
+                            <th>ประเภท Profile</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profileTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'profiles') {
+                loadProfilesList();
+            }
+        }
+
+        function setConnectionPreset(ip, port, slave) {
+            document.getElementById('inspIp').value = ip;
+            document.getElementById('inspPort').value = port;
+            document.getElementById('inspSlaveId').value = slave;
+        }
+
+        async function executeRawRead() {
+            const loader = document.getElementById('inspLoader');
+            loader.style.display = 'inline-block';
+
+            const payload = {
+                ipAddress: document.getElementById('inspIp').value.trim(),
+                port: parseInt(document.getElementById('inspPort').value),
+                slaveId: parseInt(document.getElementById('inspSlaveId').value),
+                functionCode: parseInt(document.getElementById('inspFc').value),
+                startRegister: parseInt(document.getElementById('inspStartReg').value),
+                registerCount: parseInt(document.getElementById('inspRegCount').value),
+                protocolMode: document.getElementById('inspProtocolMode').value
+            };
+
+            try {
+                const res = await fetch('/api/v1/modbus-debug/read-registers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                loader.style.display = 'none';
+
+                if (data.success) {
+                    document.getElementById('inspResultBox').style.display = 'block';
+                    document.getElementById('rawHexDump').textContent = data.rawHex || 'N/A';
+                    document.getElementById('inspMeta').textContent = `IP: ${data.ipAddress}:${data.port} | Slave: ${data.slaveId} | Response: ${data.responseTimeMs} ms | Protocol: ${data.protocolUsed}`;
+
+                    const tbody = document.getElementById('matrixTableBody');
+                    tbody.innerHTML = '';
+                    if (data.interpretations) {
+                        data.interpretations.forEach(inter => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><b>Reg ${inter.registerIndex}</b></td>
+                                <td>Offset ${inter.byteOffset}</td>
+                                <td><code style="color:#00f2fe;">${inter.hex}</code></td>
+                                <td><b style="color:#38bdf8;">${inter.float_ABCD}</b></td>
+                                <td><b style="color:#34d399;">${inter.float_CDAB}</b> (Eastron/China)</td>
+                                <td>${inter.float_BADC}</td>
+                                <td>${inter.float_DCBA}</td>
+                                <td>${inter.int32_ABCD}</td>
+                                <td>${inter.uint16_reg0}</td>
+                                <td>${inter.uint16_reg1}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                } else {
+                    alert('? ไม่สามารถอ่านค่าได้: ' + (data.message || 'Connection Timeout'));
+                }
+            } catch (err) {
+                loader.style.display = 'none';
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function executeSlaveScan() {
+            const loader = document.getElementById('scanLoader');
+            loader.style.display = 'inline-block';
+
+            const payload = {
+                ipAddress: document.getElementById('scanIp').value.trim(),
+                port: parseInt(document.getElementById('scanPort').value),
+                startSlaveId: parseInt(document.getElementById('scanStartSlave').value),
+                endSlaveId: parseInt(document.getElementById('scanEndSlave').value),
+                protocolMode: document.getElementById('scanProtocolMode').value
+            };
+
+            try {
+                const res = await fetch('/api/v1/modbus-debug/scan-slaves', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                loader.style.display = 'none';
+
+                document.getElementById('scanResultCard').style.display = 'block';
+                document.getElementById('scanSummaryText').textContent = `พบมิเตอร์ทั้งหมด ${data.foundCount} เครื่อง จากที่สแกน ${data.scannedCount} เครื่อง (ใช้เวลา ${data.totalTimeMs} ms)`;
+
+                const tbody = document.getElementById('slaveTableBody');
+                tbody.innerHTML = '';
+                if (data.foundDevices && data.foundDevices.length > 0) {
+                    data.foundDevices.forEach(dev => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><b>Slave ${dev.slaveId}</b></td>
+                            <td><span class="badge-match">ONLINE</span></td>
+                            <td>${dev.responseTimeMs} ms</td>
+                            <td>${dev.protocol}</td>
+                            <td><code>${dev.sampleValueHex}</code></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ไม่พบ Slave ID ที่ตอบสนองในสาย RS485 นี้</td></tr>';
+                }
+            } catch (err) {
+                loader.style.display = 'none';
+                alert('Error scanning slaves: ' + err.message);
+            }
+        }
+
+        async function loadProfilesList() {
+            try {
+                const res = await fetch('/api/v1/modbus/profiles');
+                const list = await res.json();
+
+                const tbody = document.getElementById('profileTableBody');
+                tbody.innerHTML = '';
+                list.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b style="color:#00f2fe;">${p.modelKey}</b></td>
+                        <td>${p.brand || '-'}</td>
+                        <td>${p.modelName || '-'}</td>
+                        <td>Function Code ${p.defaultFunctionCode}</td>
+                        <td>${p.builtIn ? '?? Built-in' : '?? Custom JSON'}</td>
+                        <td>
+                            <button style="background:rgba(0,242,254,0.15); border:1px solid #00f2fe; color:#00f2fe; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="viewProfileJson('${p.modelKey}')">??? ดู JSON Mapping</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function viewProfileJson(modelKey) {
+            const res = await fetch('/api/v1/modbus/profiles/' + modelKey);
+            const data = await res.json();
+            alert(JSON.stringify(data, null, 2));
+        }
+
+        function openNewProfileModal() {
+            const key = prompt('กรอก Model Key ยี่ห้อใหม่ (เช่น EASTRON_SDM230):');
+            if (!key) return;
+            const brand = prompt('กรอกชื่อยี่ห้อ (เช่น Eastron):');
+            const name = prompt('กรอกชื่อรุ่น (เช่น SDM230 Single Phase):');
+
+            const profile = {
+                modelKey: key.trim().toUpperCase(),
+                brand: brand || 'Custom',
+                modelName: name || key,
+                description: 'Custom added profile via Remote Scanner',
+                defaultFunctionCode: 4,
+                defaultProtocolMode: 'AUTO',
+                registerMappings: [
+                    { metric: 'voltage', registerAddress: 0, registerCount: 2, dataType: 'FLOAT32_CD_AB', multiplier: 1.0, unit: 'V' },
+                    { metric: 'current', registerAddress: 6, registerCount: 2, dataType: 'FLOAT32_CD_AB', multiplier: 1.0, unit: 'A' },
+                    { metric: 'power', registerAddress: 12, registerCount: 2, dataType: 'FLOAT32_CD_AB', multiplier: 1.0, unit: 'kW' },
+                    { metric: 'energyKwh', registerAddress: 342, registerCount: 2, dataType: 'FLOAT32_CD_AB', multiplier: 1.0, unit: 'kWh' }
+                ]
+            };
+
+            fetch('/api/v1/modbus/profiles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profile)
+            }).then(r => r.json()).then(saved => {
+                alert('บันทึก Profile JSON เรียบร้อยแล้ว!');
+                loadProfilesList();
+            });
+        }
+    </script>
+</body>
+</html>

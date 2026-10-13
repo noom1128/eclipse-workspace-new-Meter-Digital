@@ -1,0 +1,38 @@
+{
+  "modelKey" : "SCHNEIDER_PM2200",
+  "brand" : "Schneider Electric",
+  "modelName" : "PM2200 Power Meter",
+  "description" : "Schneider METSEPM2200 Series (Float32 AB_CD, Holding Registers 0x03)",
+  "defaultFunctionCode" : 3,
+  "defaultProtocolMode" : "AUTO",
+  "registerMappings" : [ {
+    "metric" : "voltage",
+    "registerAddress" : 3027,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "V"
+  }, {
+    "metric" : "current",
+    "registerAddress" : 2999,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "A"
+  }, {
+    "metric" : "power",
+    "registerAddress" : 3059,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 0.001,
+    "unit" : "kW"
+  }, {
+    "metric" : "energyKwh",
+    "registerAddress" : 3203,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kWh"
+  } ],
+  "builtIn" : true
+}

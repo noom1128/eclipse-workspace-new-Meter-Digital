@@ -1,0 +1,38 @@
+{
+  "modelKey" : "CIRCUTOR_CVMC5",
+  "brand" : "Circutor",
+  "modelName" : "CVM-C5 Analyzer",
+  "description" : "Circutor CVM-C5 Series (Float32 AB_CD, Holding Registers 0x03)",
+  "defaultFunctionCode" : 3,
+  "defaultProtocolMode" : "AUTO",
+  "registerMappings" : [ {
+    "metric" : "voltage",
+    "registerAddress" : 0,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "V"
+  }, {
+    "metric" : "current",
+    "registerAddress" : 4,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "A"
+  }, {
+    "metric" : "power",
+    "registerAddress" : 8,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 0.001,
+    "unit" : "kW"
+  }, {
+    "metric" : "energyKwh",
+    "registerAddress" : 12,
+    "registerCount" : 2,
+    "dataType" : "FLOAT32_AB_CD",
+    "multiplier" : 1.0,
+    "unit" : "kWh"
+  } ],
+  "builtIn" : true
+}

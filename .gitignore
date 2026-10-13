@@ -53,3 +53,6 @@ Thumbs.db
 *.map
 *.o
 *.d
+
+# Binaries
+cloudflared.exe

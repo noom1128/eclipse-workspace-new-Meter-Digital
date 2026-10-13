@@ -25,6 +25,13 @@ public class GatewayDevice {
     private Long readIntervalMs;
     private String activeMeterModel; // CIRCUTOR_CVMC5, SCHNEIDER_PM2200
 
+    private String readerMode = "MODE_ESP32_WIFI"; // MODE_ESP32_WIFI, MODE_ESP32_LAN, MODE_MODBUS_WIFI, MODE_MODBUS_LAN, MODE_MOXA_SERIAL
+    private Integer port = 502;
+    private Integer slaveId = 1;
+    private Integer pollingIntervalSeconds = 60;
+    private String targetRoomNumber; // e.g. "101"
+    private String protocolMode = "AUTO"; // AUTO, MODBUS_TCP, MODBUS_RTU_OVER_TCP
+
     @Column(columnDefinition = "TEXT")
     private String meterMappingJson;
 
@@ -77,9 +84,28 @@ public class GatewayDevice {
     public String getActiveMeterModel() { return activeMeterModel; }
     public void setActiveMeterModel(String activeMeterModel) { this.activeMeterModel = activeMeterModel; }
 
+    public String getReaderMode() { return readerMode != null ? readerMode : "MODE_ESP32_WIFI"; }
+    public void setReaderMode(String readerMode) { this.readerMode = readerMode; }
+
+    public Integer getPort() { return port != null ? port : 502; }
+    public void setPort(Integer port) { this.port = port; }
+
+    public Integer getSlaveId() { return slaveId != null ? slaveId : 1; }
+    public void setSlaveId(Integer slaveId) { this.slaveId = slaveId; }
+
+    public Integer getPollingIntervalSeconds() { return pollingIntervalSeconds != null ? pollingIntervalSeconds : 60; }
+    public void setPollingIntervalSeconds(Integer pollingIntervalSeconds) { this.pollingIntervalSeconds = pollingIntervalSeconds; }
+
+    public String getTargetRoomNumber() { return targetRoomNumber; }
+    public void setTargetRoomNumber(String targetRoomNumber) { this.targetRoomNumber = targetRoomNumber; }
+
+    public String getProtocolMode() { return protocolMode != null ? protocolMode : "AUTO"; }
+    public void setProtocolMode(String protocolMode) { this.protocolMode = protocolMode; }
+
     public String getMeterMappingJson() { return meterMappingJson; }
     public void setMeterMappingJson(String meterMappingJson) { this.meterMappingJson = meterMappingJson; }
 
     public LocalDateTime getLastHeartbeat() { return lastHeartbeat; }
     public void setLastHeartbeat(LocalDateTime lastHeartbeat) { this.lastHeartbeat = lastHeartbeat; }
 }
+
