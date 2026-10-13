@@ -94,6 +94,8 @@ public class BillingService {
         result.put("subtotal", subtotal);
         result.put("vatAmount", 0.0);
         result.put("totalAmount", subtotal);
+        result.put("rolloverDetected", elecCalc.isRolloverDetected());
+        result.put("warning", elecCalc.getWarningMessage());
         return result;
     }
 

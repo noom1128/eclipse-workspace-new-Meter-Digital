@@ -52,6 +52,13 @@ public class UtilityCalculationEngine {
         
         int digits = meterDigits > 0 ? meterDigits : 4;
         double maxLimit = Math.pow(10, digits);
+
+        // Auto-scale maxLimit if openingReading exceeds configured digits
+        // Supports 4, 5, 6, 7, 8, 9-digit digital and analog meters automatically
+        while (openingReading >= maxLimit) {
+            maxLimit *= 10.0;
+        }
+
         double units = (maxLimit - openingReading) + closingReading;
         return round(units);
     }
@@ -84,9 +91,12 @@ public class UtilityCalculationEngine {
 
         boolean anomaly = false;
         String warning = null;
+        if (rollover) {
+            warning = "🔄 ตรวจพบมิเตอร์หมุนครบรอบ (Rollover Guard): เลขยกมา " + openingReading + " -> เลขปิด " + closingReading + " (คำนวณหน่วยใช้จริง: " + unitsUsed + " หน่วย)";
+        }
         if (averageMonthlyUnits != null && averageMonthlyUnits > 0 && unitsUsed > (3.0 * averageMonthlyUnits)) {
             anomaly = true;
-            warning = "High consumption alert: Units used (" + unitsUsed + ") is more than 3x monthly average (" + averageMonthlyUnits + ")";
+            warning = (warning != null ? warning + " | " : "") + "High consumption alert: Units used (" + unitsUsed + ") is more than 3x monthly average (" + averageMonthlyUnits + ")";
         }
 
         return new CalculationResult(unitsUsed, totalAmount, rollover, anomaly, warning);
