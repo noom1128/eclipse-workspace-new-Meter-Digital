@@ -621,12 +621,13 @@ bool captureAndSendPhoto() {
 
   unsigned long timeout = millis();
   while (client.available() == 0) {
-    if (millis() - timeout > 10000) {
+    if (millis() - timeout > 35000) { // รอได้ถึง 35 วินาที เพื่อให้ Cloud AI ประมวลผลและตอบกลับสำเร็จ
       addLog("Timeout waiting for Spring Boot response.");
       lastCaptureMsg = "หมดเวลาการรอผลตอบกลับจากเซิร์ฟเวอร์ (Timeout)";
       client.stop();
       return false;
     }
+    delay(100);
   }
 
   String response = client.readString();
