@@ -56,7 +56,7 @@ public class MeterReadingController {
 
     @PostMapping(value = "/ocr-scan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Map<String, Object> ocrScan(@RequestParam("file") MultipartFile file) {
-        return ocrService.processMeterPhoto(file);
+        return ocrService.processMeterPhotoOffline(file);
     }
 
     @PostMapping(value = "/ocr-scan-cloud", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -149,7 +149,7 @@ public class MeterReadingController {
             if (effectiveCloud) {
                 ocrResult = ocrService.processMeterPhotoCloudAI(file, apiKey);
             } else {
-                ocrResult = ocrService.processMeterPhoto(file);
+                ocrResult = ocrService.processMeterPhotoOffline(file);
             }
 
             if (Boolean.TRUE.equals(ocrResult.get("success"))) {

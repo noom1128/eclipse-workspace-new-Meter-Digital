@@ -166,7 +166,7 @@ public class MeterOcrService {
             result.put("confidence", confidence);
             result.put("savedPath", targetPath.toString());
             result.put("engineMode", engineMode);
-            result.put("message", "สแกนสำเร็จ (" + engineMode + "): อ่านได้ " + rawText + " kWh");
+            result.put("message", "🛡️ สแกนสำเร็จด้วยระบบออฟไลน์ในเครื่อง (ฟรี 0 บาท): อ่านได้ " + rawText + " kWh (" + engineMode + ")");
 
         } catch (Exception e) {
             log.error("Failed to process meter photo OCR from path", e);
@@ -175,6 +175,37 @@ public class MeterOcrService {
         }
 
         return result;
+    }
+
+    /**
+     * Option 2: Pure Local Offline OCR Recognition (Free 0 Baht, No Cloud, No Internet).
+     */
+    public Map<String, Object> processMeterPhotoOffline(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", "กรุณาเลือกหรือถ่ายรูปภาพมิเตอร์");
+            return result;
+        }
+
+        try {
+            Files.createDirectories(OCR_UPLOAD_DIR);
+            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "meter_scan.jpg";
+            String savedFileName = System.currentTimeMillis() + "_" + originalName;
+            Path targetPath = OCR_UPLOAD_DIR.resolve(savedFileName);
+            Path lastPhotoPath = OCR_UPLOAD_DIR.resolve("last_meter.jpg");
+
+            file.transferTo(targetPath.toFile());
+            Files.copy(targetPath, lastPhotoPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            return processMeterPhoto(targetPath);
+        } catch (Exception e) {
+            log.error("Failed to process meter photo OCR offline", e);
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", "เกิดข้อผิดพลาดในการประมวลผลรูปภาพแบบออฟไลน์: " + e.getMessage());
+            return result;
+        }
     }
 
     /**
