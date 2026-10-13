@@ -168,12 +168,14 @@ void setup() {
                     ".bg-green{background:rgba(16,185,129,0.2);color:#34d399;border:1px solid #10b981;}"
                     ".bg-yellow{background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid #f59e0b;}"
                     ".bg-cyan{background:rgba(0,242,254,0.15);color:#00f2fe;border:1px solid #00f2fe;}"
-                    ".stream-container{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000;border:2px solid #334155;margin-bottom:14px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;}"
+                    ".stream-container{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000;border:2px solid #334155;margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;}"
                     ".stream-container img{width:100%;height:100%;object-fit:contain;display:block;}"
                     ".target-guide{position:absolute;top:25%;left:15%;right:15%;bottom:25%;border:2px dashed #22c55e;border-radius:8px;box-shadow:0 0 12px rgba(34,197,94,0.5);pointer-events:none;display:flex;align-items:center;justify-content:center;text-align:center;}"
                     ".target-label{background:rgba(15,23,42,0.8);color:#22c55e;font-size:0.75rem;padding:3px 8px;border-radius:4px;font-weight:bold;}"
                     ".stream-overlay{position:absolute;top:10px;left:10px;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);padding:4px 10px;border-radius:20px;font-size:0.75rem;color:#38bdf8;font-weight:bold;display:flex;align-items:center;gap:6px;}"
                     ".pulse-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 8px #22c55e;}"
+                    ".mode-btn{padding:12px 10px;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:#1e293b;color:#94a3b8;transition:all 0.2s;text-align:center;box-sizing:border-box;}"
+                    ".mode-btn.active{border-color:#00f2fe;background:rgba(0,242,254,0.15);color:#00f2fe;box-shadow:0 0 15px rgba(0,242,254,0.3);}"
                     ".btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:1rem;font-weight:bold;cursor:pointer;margin-bottom:10px;text-align:center;text-decoration:none;box-sizing:border-box;transition:all 0.2s;}"
                     ".btn:active{transform:scale(0.98);}"
                     ".btn-primary{background:linear-gradient(135deg,#00f2fe,#4facfe);color:#0f172a;box-shadow:0 4px 15px rgba(0,242,254,0.3);}"
@@ -192,16 +194,26 @@ void setup() {
                     "<span class='status-badge bg-yellow'>📐 " + orientationStatus + "</span>"
                     "</div>"
                     
+                    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;'>"
+                    "<button id='btnLive' type='button' class='mode-btn' onclick='setMode(true)'>🟢 LIVE VIEW (สตรีมสด)</button>"
+                    "<button id='btnSnap' type='button' class='mode-btn active' onclick='setMode(false)'>📸 SNAP (ดูทีละภาพ)</button>"
+                    "</div>"
+
                     "<div class='stream-container'>"
                     "<img id='liveImg' src='/stream' alt='Live Viewfinder'>"
                     "<div class='target-guide'><div class='target-label'>🎯 เล็งตัวเลขให้อยู่ในกรอบนี้</div></div>"
-                    "<div class='stream-overlay'><span class='pulse-dot'></span> LIVE VIEW (<span id='fpsCounter'>--</span> fps)</div>"
+                    "<div class='stream-overlay' id='overlayBadge'>📷 SNAP VIEW (ภาพนิ่งล่าสุด)</div>"
+                    "</div>"
+
+                    "<div id='snapControls' style='margin-bottom:12px;'>"
+                    "<button type='button' class='btn' style='background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;margin-bottom:0;' onclick='triggerSnap()'>📸 กดถ่ายภาพ SNAP ใหม่ (ดูมุมเล็ง)</button>"
                     "</div>"
 
                     "<div class='tip-box'>"
-                    "💡 <b>คำแนะนำการส่อง:</b> เล็งหน้าปัดมิเตอร์ให้อยู่ตรงกลางกรอบสีเขียว<br>"
-                    "• หากกล้องติดกลับหัว ให้กดปุ่ม <b>'🔄 หมุนภาพ 180°'</b> ด้านล่าง<br>"
-                    "• <b>ปิดไฟ Flash ไว้ดีที่สุด</b> เพื่อไม่ให้แสงขาวสะท้อนฝากระจกบดบังตัวเลข"
+                    "💡 <b>โหมดการดูภาพ:</b><br>"
+                    "• <b>SNAP (แนะนำ):</b> โหลดทีละภาพ รวดเร็ว ไม่กินเน็ต ไม่กระตุก<br>"
+                    "• <b>LIVE VIEW:</b> ภาพสดต่อเนื่องสำหรับขยับปรับมุมกล้อง<br>"
+                    "• <b>การบันทึก:</b> ทิศทางหมุนกล้อง 180° บันทึกลงชิปถาวรแล้ว ปิดเครื่องก็ไม่หายครับ"
                     "</div>";
 
       if (lastCaptureStatus != "") {
@@ -239,34 +251,57 @@ void setup() {
 
               "<script>"
               "let img = document.getElementById('liveImg');"
-              "let fpsSpan = document.getElementById('fpsCounter');"
-              "let isUpdating = false;"
+              "let overlay = document.getElementById('overlayBadge');"
+              "let isLive = false;"
+              "let isFetching = false;"
               "let frameCount = 0;"
               "let lastTime = Date.now();"
-              "function loadStreamFrame() {"
-              "  if (isUpdating) return;"
-              "  isUpdating = true;"
-              "  let nextImg = new Image();"
-              "  nextImg.src = '/stream?t=' + Date.now();"
-              "  nextImg.onload = function() {"
-              "    img.src = nextImg.src;"
-              "    isUpdating = false;"
+              "function setMode(live) {"
+              "  isLive = live;"
+              "  document.getElementById('btnLive').className = live ? 'mode-btn active' : 'mode-btn';"
+              "  document.getElementById('btnSnap').className = !live ? 'mode-btn active' : 'mode-btn';"
+              "  document.getElementById('snapControls').style.display = live ? 'none' : 'block';"
+              "  if (live) {"
+              "    overlay.innerHTML = '<span class=\"pulse-dot\"></span> LIVE VIEW (<span id=\"fpsVal\">--</span> fps)';"
+              "    fetchNextFrame();"
+              "  } else {"
+              "    overlay.innerHTML = '📷 SNAP VIEW (ภาพนิ่งล่าสุด)';"
+              "    triggerSnap();"
+              "  }"
+              "}"
+              "function triggerSnap() {"
+              "  if (isFetching) return;"
+              "  isFetching = true;"
+              "  let n = new Image();"
+              "  n.src = '/stream?t=' + Date.now();"
+              "  n.onload = function() { img.src = n.src; isFetching = false; };"
+              "  n.onerror = function() { isFetching = false; };"
+              "}"
+              "function fetchNextFrame() {"
+              "  if (!isLive || isFetching) return;"
+              "  isFetching = true;"
+              "  let n = new Image();"
+              "  n.src = '/stream?t=' + Date.now();"
+              "  n.onload = function() {"
+              "    img.src = n.src;"
+              "    isFetching = false;"
               "    frameCount++;"
               "    let now = Date.now();"
               "    if (now - lastTime >= 1500) {"
               "      let fps = (frameCount / ((now - lastTime) / 1000)).toFixed(1);"
-              "      if (fpsSpan) fpsSpan.innerText = fps;"
+              "      let span = document.getElementById('fpsVal');"
+              "      if (span) span.innerText = fps;"
               "      frameCount = 0;"
               "      lastTime = now;"
               "    }"
-              "    setTimeout(loadStreamFrame, 150);"
+              "    if (isLive) setTimeout(fetchNextFrame, 350);"
               "  };"
-              "  nextImg.onerror = function() {"
-              "    isUpdating = false;"
-              "    setTimeout(loadStreamFrame, 1000);"
+              "  n.onerror = function() {"
+              "    isFetching = false;"
+              "    if (isLive) setTimeout(fetchNextFrame, 1000);"
               "  };"
               "}"
-              "setTimeout(loadStreamFrame, 200);"
+              "triggerSnap();"
               "</script>"
 
               "</div></body></html>";
@@ -481,10 +516,6 @@ void handleJpgStream() {
     return;
   }
 
-  // Clear stale buffer in case grab_mode holds old frame
-  camera_fb_t * stale_fb = esp_camera_fb_get();
-  if (stale_fb) esp_camera_fb_return(stale_fb);
-
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
     server.send(500, "text/plain", "Camera capture failed");
@@ -504,7 +535,7 @@ void handleJpgStream() {
 
     uint8_t *buf = fb->buf;
     size_t len = fb->len;
-    size_t chunk = 1024;
+    size_t chunk = 2048;
     for (size_t i = 0; i < len; i += chunk) {
       size_t toWrite = (i + chunk < len) ? chunk : (len - i);
       client.write(buf + i, toWrite);
