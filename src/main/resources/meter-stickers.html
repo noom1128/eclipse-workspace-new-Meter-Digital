@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏷️ พิมพ์สติ๊กเกอร์ QR Code ประจำห้อง | Meter Digital</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Offline-capable QR Code Generator -->
+  <script src="/js/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090c10;
+      --bg-card: rgba(22, 27, 38, 0.85);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --purple-main: #a855f7;
+      --cyan-main: #06b6d4;
+      --blue-main: #3b82f6;
+      --green-main: #10b981;
+      --orange-main: #f59e0b;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Kanit', 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    /* Top Navigation Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #ffffff, #d1d5db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #38bdf8;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+
+    /* Main Workspace Layout */
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 22px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Sidebar Controls Card */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      backdrop-filter: blur(12px);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .layout-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .layout-btn {
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+    }
+
+    .layout-btn:hover {
+      border-color: #64748b;
+    }
+
+    .layout-btn.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    .room-list-container {
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      background: #0b1120;
+      padding: 8px;
+    }
+
+    .room-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+
+    .room-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .room-item input[type="checkbox"] {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: #0284c7;
+    }
+
+    .room-tenant-badge {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    /* Print Preview Stage */
+    .preview-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 14px 20px;
+    }
+
+    .preview-meta {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .preview-meta b {
+      color: #38bdf8;
+    }
+
+    .sheet-wrapper {
+      background: #334155;
+      padding: 30px;
+      border-radius: 18px;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    /* White Paper Sheet */
+    .paper-sheet {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      border-radius: 4px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    /* Layout: A4 Sheet (Standard 210mm x 297mm) */
+    .layout-a4-3x4 {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 10mm;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 6mm;
+    }
+
+    .layout-a4-2x4 {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 12mm 10mm;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 8mm;
+    }
+
+    .layout-a4-4x5 {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 8mm;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 4mm;
+    }
+
+    /* Layout: Thermal Labels (Individual) */
+    .layout-thermal-50x30 {
+      width: 50mm;
+      height: 30mm;
+      padding: 2mm 3mm;
+      margin: 0 auto 10px;
+    }
+
+    .layout-thermal-50x40 {
+      width: 50mm;
+      height: 40mm;
+      padding: 3mm;
+      margin: 0 auto 10px;
+    }
+
+    .layout-thermal-40x30 {
+      width: 40mm;
+      height: 30mm;
+      padding: 2mm;
+      margin: 0 auto 10px;
+    }
+
+    /* Sticker Card Design */
+    .sticker-card {
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      background: #ffffff;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .sticker-card.no-border {
+      border-style: solid;
+      border-color: #f1f5f9;
+    }
+
+    .sticker-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+    }
+
+    .sticker-dorm-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sticker-icon {
+      font-size: 11px;
+      color: #0284c7;
+    }
+
+    .sticker-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .sticker-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sticker-room-label {
+      font-size: 8px;
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .sticker-room-number {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #000000;
+      letter-spacing: -0.5px;
+    }
+
+    .sticker-meter-id {
+      font-size: 9px;
+      color: #475569;
+      font-weight: 600;
+      margin-top: 2px;
+      font-family: monospace;
+    }
+
+    .sticker-qr-box {
+      width: 75px;
+      height: 75px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      padding: 2px;
+      border-radius: 4px;
+    }
+
+    .sticker-qr-box canvas, .sticker-qr-box img {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .sticker-footer {
+      font-size: 7.5px;
+      color: #64748b;
+      text-align: center;
+      margin-top: 4px;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Thermal Label Compact Card Styling */
+    .layout-thermal-50x30 .sticker-card,
+    .layout-thermal-40x30 .sticker-card {
+      padding: 4px 6px;
+      border: 1px solid #000;
+      height: 100%;
+    }
+    .layout-thermal-50x30 .sticker-header,
+    .layout-thermal-40x30 .sticker-header {
+      display: none;
+    }
+    .layout-thermal-50x30 .sticker-room-number,
+    .layout-thermal-40x30 .sticker-room-number {
+      font-size: 20px;
+    }
+    .layout-thermal-50x30 .sticker-qr-box,
+    .layout-thermal-40x30 .sticker-qr-box {
+      width: 50px;
+      height: 50px;
+    }
+    .layout-thermal-50x30 .sticker-footer,
+    .layout-thermal-40x30 .sticker-footer {
+      display: none;
+    }
+
+    /* Print Stylesheet */
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      header, .sidebar, .preview-header, .no-print {
+        display: none !important;
+      }
+
+      .workspace {
+        display: block !important;
+        max-width: none !important;
+        margin: 0 !important;
+      }
+
+      .sheet-wrapper {
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .paper-sheet {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+      }
+
+      @page {
+        margin: 6mm;
+        size: A4 portrait;
+      }
+
+      .page-break {
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Bar -->
+  <header class="no-print">
+    <div class="brand">
+      <div class="brand-logo">🏷️</div>
+      <div class="brand-title">
+        <h1>พิมพ์สติ๊กเกอร์ QR Code ประจำห้อง</h1>
+        <p>สร้างป้าย QR Code แปะข้างมิเตอร์ สำหรับมือถือสแกนตรงห้อง & AI ป้องกันถ่ายผิดห้อง</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a href="/" class="btn btn-secondary"><i class="fas fa-home"></i> หน้าหลัก</a>
+      <a href="/billing" class="btn btn-secondary"><i class="fas fa-file-invoice-dollar"></i> ออกบิล</a>
+      <a href="/meter-reader" class="btn btn-secondary" target="_blank"><i class="fas fa-camera"></i> หน้าจดมิเตอร์</a>
+      <button type="button" class="btn btn-success" onclick="window.print()">
+        <i class="fas fa-print"></i> <b>สั่งพิมพ์สติ๊กเกอร์ (Print)</b>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace Container -->
+  <div class="workspace">
+    
+    <!-- Left Sidebar: Settings & Room Selection -->
+    <aside class="sidebar no-print">
+      
+      <!-- Card 1: Sticker Settings -->
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-sliders-h" style="color: var(--cyan-main);"></i> ตั้งค่าสติ๊กเกอร์
+        </div>
+
+        <div class="form-group">
+          <label>📄 เลือกขนาดกระดาษ / สติ๊กเกอร์</label>
+          <div class="layout-options">
+            <div class="layout-btn active" onclick="setLayout('a4-3x4')" id="btn-a4-3x4">
+              <b>A4 (12 ดวง)</b>
+              <div style="font-size:0.7rem;color:#94a3b8;">3x4 ~65mm ⭐ นิยม</div>
+            </div>
+            <div class="layout-btn" onclick="setLayout('a4-2x4')" id="btn-a4-2x4">
+              <b>A4 (8 ดวง)</b>
+              <div style="font-size:0.7rem;color:#94a3b8;">2x4 ~95mm ขนาดใหญ่</div>
+            </div>
+            <div class="layout-btn" onclick="setLayout('a4-4x5')" id="btn-a4-4x5">
+              <b>A4 (20 ดวง)</b>
+              <div style="font-size:0.7rem;color:#94a3b8;">4x5 ~48mm ประหยัด</div>
+            </div>
+            <div class="layout-btn" onclick="setLayout('thermal-50x30')" id="btn-thermal-50x30">
+              <b>Thermal 50x30</b>
+              <div style="font-size:0.7rem;color:#94a3b8;">เครื่องปริ้นท์ฉลากม้วน</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>🏢 ชื่อหอพัก / อาคาร (แสดงบนหัวป้าย)</label>
+          <input type="text" id="inputDormName" class="form-control" value="GREEN HOME RESIDENCE" oninput="updateStickers()">
+        </div>
+
+        <div class="form-group">
+          <label>💬 ข้อความคำแนะนำ (ด้านล่างสติ๊กเกอร์)</label>
+          <input type="text" id="inputFooterNote" class="form-control" value="📷 สแกนจดมิเตอร์ หรือถ่ายรูปให้ติดป้ายนี้" oninput="updateStickers()">
+        </div>
+
+        <div class="form-group">
+          <label>🔗 โหมดข้อมูลใน QR Code</label>
+          <select id="selectQrType" class="form-control" onchange="updateStickers()">
+            <option value="URL_AUTO">🌐 URL เปิดกล้องจดมิเตอร์ตรงห้อง (แนะนำ)</option>
+            <option value="ROOM_CODE">🏷️ รหัสสั้น (เช่น ROOM:101)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="groupBaseUrl">
+          <label>🌐 Base URL สำหรับเปิดมือถือ</label>
+          <input type="text" id="inputBaseUrl" class="form-control" placeholder="https://..." oninput="updateStickers()">
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <button type="button" class="btn btn-secondary" style="font-size:0.75rem;padding:4px 8px;" onclick="setBaseUrl('auto')">Auto-Detect</button>
+            <button type="button" class="btn btn-secondary" style="font-size:0.75rem;padding:4px 8px;" onclick="setBaseUrl('lan')">Local Wi-Fi</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <input type="checkbox" id="checkDashedBorder" checked onchange="toggleBorders(this.checked)" style="width:16px;height:16px;accent-color:#0284c7;cursor:pointer;">
+          <label for="checkDashedBorder" style="font-size:0.85rem;color:var(--text-secondary);cursor:pointer;">แสดงเส้นประรอบสติ๊กเกอร์ (ช่วยในการใช้กรรไกร/คัตเตอร์ตัด)</label>
+        </div>
+      </div>
+
+      <!-- Card 2: Room Selection -->
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-door-open" style="color: var(--green-main);"></i> เลือกห้องที่ต้องการพิมพ์
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);">
+            <a href="javascript:void(0)" onclick="selectAllRooms(true)" style="color:#38bdf8;text-decoration:none;margin-right:8px;">เลือกทั้งหมด</a>
+            <a href="javascript:void(0)" onclick="selectAllRooms(false)" style="color:#94a3b8;text-decoration:none;">ล้าง</a>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:8px;">
+          <input type="text" id="searchRoom" class="form-control" placeholder="🔍 ค้นหาเลขห้อง..." oninput="filterRooms()">
+        </div>
+
+        <div class="room-list-container" id="roomListContainer">
+          <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:0.85rem;">กำลังโหลดห้องพัก...</div>
+        </div>
+      </div>
+
+      <!-- Card 3: Printing Instructions -->
+      <div class="card" style="border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">
+        <div style="font-size:0.85rem;color:#38bdf8;font-weight:700;margin-bottom:6px;">
+          💡 เคล็ดลับการตั้งค่าเครื่องพิมพ์ (Print Settings)
+        </div>
+        <ul style="font-size:0.8rem;color:#cbd5e1;padding-left:18px;line-height:1.6;">
+          <li><b>ปลายทาง (Destination):</b> เลือกเครื่องพิมพ์ หรือ <i>Save as PDF</i></li>
+          <li><b>ระยะขอบ (Margins):</b> เลือกเป็น <b>กำหนดเอง (Custom)</b> หรือ <b>ไม่มี/น้อยสุด (Minimum)</b></li>
+          <li><b>มาตราส่วน (Scale):</b> ตั้งเป็น <b>100%</b> (หรือ Fit to printable area)</li>
+          <li><b>ตัวเลือกเพิ่มเติม:</b> ติ๊กถูกที่ <i>"กราฟิกพื้นหลัง (Background graphics)"</i> เพื่อความคมชัดสูงสุด</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- Right Area: Paper Preview & Print Canvas -->
+    <main class="preview-stage">
+      
+      <div class="preview-header no-print">
+        <div class="preview-meta">
+          ตัวอย่างแผ่นสติ๊กเกอร์: <b id="lblLayoutName">A4 (3x4 = 12 ดวง/แผ่น)</b> | จำนวนที่เลือก: <b id="lblSelectedCount">0 ห้อง</b>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+          <i class="fas fa-print"></i> พิมพ์เอกสารนี้ (Ctrl + P)
+        </button>
+      </div>
+
+      <!-- Sheet Container -->
+      <div class="sheet-wrapper">
+        <div id="printSheetsContainer">
+          <!-- Sheets will be generated here -->
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    let rooms = [];
+    let selectedRoomIds = new Set();
+    let currentLayout = 'a4-3x4';
+    let propertyProfile = null;
+
+    // Load Initial Data
+    document.addEventListener('DOMContentLoaded', async () => {
+      initBaseUrl();
+      await loadPropertyProfile();
+      await loadRooms();
+      renderStickers();
+    });
+
+    function initBaseUrl() {
+      const origin = window.location.origin;
+      document.getElementById('inputBaseUrl').value = origin;
+    }
+
+    function setBaseUrl(type) {
+      if (type === 'auto') {
+        document.getElementById('inputBaseUrl').value = window.location.origin;
+      } else if (type === 'lan') {
+        document.getElementById('inputBaseUrl').value = 'https://10.21.72.108:8443';
+      }
+      updateStickers();
+    }
+
+    async function loadPropertyProfile() {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+        const res = await fetch('/api/settings/property-profile', { headers });
+        if (res.ok) {
+          propertyProfile = await res.json();
+          if (propertyProfile && propertyProfile.name) {
+            document.getElementById('inputDormName').value = propertyProfile.name;
+          }
+        }
+      } catch (e) {
+        console.warn('Property profile load fallback', e);
+      }
+    }
+
+    async function loadRooms() {
+      const container = document.getElementById('roomListContainer');
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+        const res = await fetch('/api/rooms', { headers });
+        if (!res.ok) throw new Error('Failed to load rooms');
+        
+        const allRooms = await res.json();
+        // Deduplicate rooms by roomNumber
+        const roomMap = new Map();
+        for (const r of allRooms) {
+          if (!r.roomNumber) continue;
+          const num = r.roomNumber.trim();
+          if (!roomMap.has(num) || (!roomMap.get(num).tenantName && r.tenantName)) {
+            roomMap.set(num, r);
+          }
+        }
+
+        rooms = Array.from(roomMap.values()).sort((a, b) => 
+          String(a.roomNumber).localeCompare(String(b.roomNumber), undefined, { numeric: true })
+        );
+
+        // Select all rooms by default
+        selectedRoomIds = new Set(rooms.map(r => r.id));
+
+        renderRoomList(rooms);
+        updateSelectedCount();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div style="color:#ef4444;padding:12px;font-size:0.85rem;">ไม่สามารถโหลดห้องพักได้: ${err.message}</div>`;
+      }
+    }
+
+    function renderRoomList(list) {
+      const container = document.getElementById('roomListContainer');
+      if (!list || list.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:15px;color:#94a3b8;font-size:0.85rem;">ไม่พบห้องพัก</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(r => `
+        <label class="room-item" id="room-item-${r.id}">
+          <input type="checkbox" value="${r.id}" ${selectedRoomIds.has(r.id) ? 'checked' : ''} onchange="toggleRoom(${r.id}, this.checked)">
+          <span style="font-weight:700;color:#f8fafc;">ห้อง ${r.roomNumber}</span>
+          <span class="room-tenant-badge">${r.tenantName || 'ว่าง'}</span>
+        </label>
+      `).join('');
+    }
+
+    function filterRooms() {
+      const query = document.getElementById('searchRoom').value.toLowerCase().trim();
+      const filtered = rooms.filter(r => 
+        (r.roomNumber && r.roomNumber.toLowerCase().includes(query)) ||
+        (r.tenantName && r.tenantName.toLowerCase().includes(query))
+      );
+      renderRoomList(filtered);
+    }
+
+    function toggleRoom(id, isChecked) {
+      if (isChecked) {
+        selectedRoomIds.add(id);
+      } else {
+        selectedRoomIds.delete(id);
+      }
+      updateSelectedCount();
+      renderStickers();
+    }
+
+    function selectAllRooms(select) {
+      if (select) {
+        selectedRoomIds = new Set(rooms.map(r => r.id));
+      } else {
+        selectedRoomIds.clear();
+      }
+      filterRooms();
+      updateSelectedCount();
+      renderStickers();
+    }
+
+    function updateSelectedCount() {
+      const count = selectedRoomIds.size;
+      document.getElementById('lblSelectedCount').textContent = `${count} ห้อง (จาก ${rooms.length} ห้อง)`;
+    }
+
+    function setLayout(layout) {
+      currentLayout = layout;
+      document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-' + layout);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const labels = {
+        'a4-3x4': 'A4 (3x4 = 12 ดวง/แผ่น)',
+        'a4-2x4': 'A4 (2x4 = 8 ดวง/แผ่น - ใหญ่)',
+        'a4-4x5': 'A4 (4x5 = 20 ดวง/แผ่น - กะทัดรัด)',
+        'thermal-50x30': 'Thermal Label (50x30 mm)',
+        'thermal-50x40': 'Thermal Label (50x40 mm)',
+        'thermal-40x30': 'Thermal Label (40x30 mm)'
+      };
+      document.getElementById('lblLayoutName').textContent = labels[layout] || layout;
+
+      renderStickers();
+    }
+
+    function toggleBorders(show) {
+      document.querySelectorAll('.sticker-card').forEach(card => {
+        if (show) card.classList.remove('no-border');
+        else card.classList.add('no-border');
+      });
+    }
+
+    function updateStickers() {
+      renderStickers();
+    }
+
+    function getItemsPerSheet() {
+      if (currentLayout === 'a4-3x4') return 12;
+      if (currentLayout === 'a4-2x4') return 8;
+      if (currentLayout === 'a4-4x5') return 20;
+      return 1; // Thermal labels are 1 per sheet/label
+    }
+
+    function renderStickers() {
+      const container = document.getElementById('printSheetsContainer');
+      container.innerHTML = '';
+
+      const selectedRooms = rooms.filter(r => selectedRoomIds.has(r.id));
+      if (selectedRooms.length === 0) {
+        container.innerHTML = `
+          <div style="background:#fff;padding:60px 40px;border-radius:12px;text-align:center;color:#64748b;">
+            <div style="font-size:3rem;margin-bottom:10px;">🏷️</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#1e293b;">ยังไม่ได้เลือกห้องพักสำหรับพิมพ์สติ๊กเกอร์</div>
+            <div style="font-size:0.85rem;margin-top:6px;">กรุณาติ๊กเลือกห้องพักที่ต้องการในเมนูด้านซ้ายครับ</div>
+          </div>
+        `;
+        return;
+      }
+
+      const dormName = document.getElementById('inputDormName').value.trim() || 'METER DIGITAL';
+      const footerNote = document.getElementById('inputFooterNote').value.trim();
+      const qrType = document.getElementById('selectQrType').value;
+      const baseUrl = document.getElementById('inputBaseUrl').value.trim() || window.location.origin;
+      const showBorder = document.getElementById('checkDashedBorder').checked;
+
+      const perSheet = getItemsPerSheet();
+      const totalSheets = Math.ceil(selectedRooms.length / perSheet);
+
+      for (let s = 0; s < totalSheets; s++) {
+        const sheetDiv = document.createElement('div');
+        sheetDiv.className = `paper-sheet layout-${currentLayout} ${s < totalSheets - 1 ? 'page-break' : ''}`;
+
+        const chunk = selectedRooms.slice(s * perSheet, (s + 1) * perSheet);
+        
+        chunk.forEach(room => {
+          const card = document.createElement('div');
+          card.className = `sticker-card ${showBorder ? '' : 'no-border'}`;
+
+          // QR Code payload
+          let qrData = '';
+          if (qrType === 'URL_AUTO') {
+            qrData = `${baseUrl}/meter-reader?room=${encodeURIComponent(room.roomNumber)}`;
+          } else {
+            qrData = `ROOM:${room.roomNumber}`;
+          }
+
+          const qrBoxId = `qr-${s}-${room.id}-${Date.now()}`;
+
+          card.innerHTML = `
+            <div class="sticker-header">
+              <span class="sticker-dorm-name">
+                <i class="fas fa-bolt sticker-icon"></i> ${dormName}
+              </span>
+              <span style="font-size:8px;font-weight:700;color:#0284c7;background:#e0f2fe;padding:1px 4px;border-radius:4px;">
+                ELEC
+              </span>
+            </div>
+            
+            <div class="sticker-body">
+              <div class="sticker-info">
+                <div class="sticker-room-label">ROOM / ห้องพัก</div>
+                <div class="sticker-room-number">${room.roomNumber}</div>
+                <div class="sticker-meter-id">ID: METER-${room.roomNumber}</div>
+              </div>
+              <div class="sticker-qr-box" id="${qrBoxId}">
+                <!-- QR rendered by JS -->
+              </div>
+            </div>
+
+            <div class="sticker-footer">
+              ${footerNote || 'สแกนเพื่อจดมิเตอร์ หรือถ่ายรูปให้ติดป้ายนี้'}
+            </div>
+          `;
+
+          sheetDiv.appendChild(card);
+
+          // Generate QR code asynchronously
+          setTimeout(() => {
+            const el = document.getElementById(qrBoxId);
+            if (el) {
+              el.innerHTML = '';
+              if (typeof QRCode !== 'undefined') {
+                new QRCode(el, {
+                  text: qrData,
+                  width: 140,
+                  height: 140,
+                  colorDark: "#000000",
+                  colorLight: "#ffffff",
+                  correctLevel: QRCode.CorrectLevel.M
+                });
+              } else {
+                // Fallback to QR Server API if QRCode.js is not loaded
+                el.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrData)}" alt="QR" style="width:100%;height:100%;">`;
+              }
+            }
+          }, 0);
+        });
+
+        container.appendChild(sheetDiv);
+      }
+    }
+  </script>
+</body>
+</html>

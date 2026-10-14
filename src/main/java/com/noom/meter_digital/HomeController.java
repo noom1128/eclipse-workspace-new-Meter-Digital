@@ -91,6 +91,23 @@ public class HomeController {
         return getInlineMeterReaderHtml();
     }
 
+    @GetMapping(value = { "/meter-stickers", "/meter-stickers.html", "/room-stickers",
+            "/stickers" }, produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    @ResponseBody
+    public String meterStickers() {
+        String[] paths = { "/meter-stickers.html", "/static/meter-stickers.html", "/templates/meter-stickers.html" };
+        for (String path : paths) {
+            try (InputStream is = getClass().getResourceAsStream(path)) {
+                if (is != null) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "<h1>Room QR Stickers</h1>";
+    }
+
     @GetMapping(value = { "/modbus-debugger", "/modbus-remote-tool" }, produces = MediaType.TEXT_HTML_VALUE
             + ";charset=UTF-8")
     @ResponseBody
@@ -558,7 +575,10 @@ public class HomeController {
                 + "<div class='container'>"
                 + "<div class='header'>"
                 + "  <h1>📲 เดินจดมิเตอร์มือถือ</h1>"
-                + "  <a href='/' class='btn-nav'>🏠 หน้าหลัก</a>"
+                + "  <div style='display:flex;gap:6px;'>"
+                + "    <a href='/meter-stickers' class='btn-nav' style='background:rgba(56,189,248,0.2);color:#38bdf8;border:1px solid rgba(56,189,248,0.4);'>🏷️ สติ๊กเกอร์ QR</a>"
+                + "    <a href='/' class='btn-nav'>🏠 หน้าหลัก</a>"
+                + "  </div>"
                 + "</div>"
                 + "<div class='card' style='border: 2px solid #0284c7; background: rgba(2,132,199,0.08);'>"
                 + "  <div class='card-title' style='color:#38bdf8;'>📱 วิธีการเข้าใช้งานจากมือถือ (เปิดกล้องถ่ายสดได้ทันที)</div>"
@@ -830,17 +850,17 @@ public class HomeController {
                 + "    loadPendingPhotos();"
                 + "  } catch(e) { alert('Error: ' + e.message); }"
                 + "}"
-                + "const CLOUD_URL = 'https://laws-creativity-scales-tour.trycloudflare.com/meter-reader';"
-                + "const LAN_URL = 'https://10.21.72.108:8443/meter-reader';"
                 + "function switchQrMode(mode) {"
+                + "  const activeCloud = window.location.hostname.includes('trycloudflare.com') ? (window.location.origin + '/meter-reader') : 'https://polls-reverse-hoped-installations.trycloudflare.com/meter-reader';"
+                + "  const LAN_URL = 'https://10.21.72.108:8443/meter-reader';"
                 + "  const urlBox = document.getElementById('hostUrlBox');"
                 + "  const qrImg = document.getElementById('qrCodeImg');"
                 + "  const desc = document.getElementById('hostUrlDesc');"
                 + "  const btnCloud = document.getElementById('btnTabCloud');"
                 + "  const btnLan = document.getElementById('btnTabLan');"
                 + "  if (mode === 'cloud') {"
-                + "    urlBox.innerText = CLOUD_URL;"
-                + "    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(CLOUD_URL);"
+                + "    urlBox.innerText = activeCloud;"
+                + "    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(activeCloud);"
                 + "    desc.innerText = 'ลิงก์ออนไลน์ Cloudflare Tunnel ปลอดภัยสากล เปิดได้จากเน็ต 4G/5G และ Wi-Fi ทุกที่:';"
                 + "    btnCloud.style.background = 'linear-gradient(135deg,#0284c7,#2563eb)';"
                 + "    btnLan.style.background = '#334155';"
@@ -856,6 +876,16 @@ public class HomeController {
                 + "  loadPendingPhotos();"
                 + "  if (window.location.hostname.includes('trycloudflare.com')) {"
                 + "    switchQrMode('cloud');"
+                + "  }"
+                + "  const urlParams = new URLSearchParams(window.location.search);"
+                + "  const roomParam = urlParams.get('room') || urlParams.get('roomNumber');"
+                + "  if (roomParam) {"
+                + "    const rInput = document.getElementById('roomNumber');"
+                + "    if (rInput) {"
+                + "      rInput.value = roomParam;"
+                + "      rInput.style.borderColor = '#10b981';"
+                + "      rInput.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.35)';"
+                + "    }"
                 + "  }"
                 + "});"
                 + "</script></body></html>";
