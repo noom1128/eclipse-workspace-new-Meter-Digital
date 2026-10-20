@@ -2,7 +2,6 @@
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
@@ -11,7 +10,6 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 RUN apk add --no-cache curl
 COPY --from=build /app/target/meter-digital-0.0.1-SNAPSHOT.jar app.jar
-COPY dorm.db ./dorm.db
 
 # Default environment variables for Render
 ENV PORT=8080
