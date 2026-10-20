@@ -444,7 +444,7 @@
     <!-- Header Bar -->
     <header>
         <div class="brand">
-            <div class="brand-logo">ND</div>
+            <div class="brand-logo">NP</div>
             <div class="brand-title">
                 <h1>METER DIGITAL MONITORING</h1>
                 <p>Real-Time Smart Energy Analytics & Building System</p>
@@ -505,9 +505,9 @@
                         <path d="M30 55 L100 90 L100 190 L30 155 Z" fill="url(#left-wall)" stroke="rgba(255,255,255,0.1)"/>
                         <path d="M100 90 L170 55 L170 155 L100 190 Z" fill="url(#right-wall)" stroke="rgba(255,255,255,0.1)"/>
                         
-                        <!-- ND Logo Circle Badge on Roof -->
+                        <!-- NP Logo Circle Badge on Roof -->
                         <circle cx="100" cy="55" r="22" fill="#eab308" stroke="#ffffff" stroke-width="2" filter="url(#glow)"/>
-                        <text x="100" y="61" font-family="Inter" font-weight="900" font-size="14" fill="#000" text-anchor="middle">ND</text>
+                        <text x="100" y="61" font-family="Inter" font-weight="900" font-size="14" fill="#000" text-anchor="middle">NP</text>
                         
                         <!-- Windows Glowing -->
                         <!-- Left Wall Windows -->
@@ -576,43 +576,43 @@
             <!-- 4 Stat Cards Row -->
             <div class="stats-grid">
                 
-                <!-- Kilowatt-hour Card -->
+                <!-- Total Energy (kWh) Card -->
                 <div class="stat-card" style="--accent-color: var(--purple-main);">
-                    <div class="stat-label">Kilowatt-hour</div>
-                    <div class="stat-subtext">Office Main</div>
+                    <div class="stat-label">Total Energy</div>
+                    <div class="stat-subtext">หน่วยสะสม (kWh)</div>
                     <div class="stat-value">
                         <span id="stat-kwh">35.9</span>
                         <span class="stat-unit">kWh</span>
                     </div>
                 </div>
 
-                <!-- Carbon Footprint Card -->
-                <div class="stat-card" style="--accent-color: var(--magenta-main);">
-                    <div class="stat-label">Carbon Footprint</div>
-                    <div class="stat-subtext">Office Main</div>
+                <!-- Active Power (W) Card -->
+                <div class="stat-card" style="--accent-color: var(--orange-main);">
+                    <div class="stat-label">Active Power</div>
+                    <div class="stat-subtext">กำลังไฟฟ้าขณะนี้</div>
                     <div class="stat-value">
-                        <span id="stat-co2">21.5</span>
-                        <span class="stat-unit">kgCO2e</span>
+                        <span id="stat-power">275.6</span>
+                        <span class="stat-unit">W</span>
                     </div>
                 </div>
 
-                <!-- Temperature Card -->
+                <!-- Voltage (V) Card -->
                 <div class="stat-card" style="--accent-color: var(--cyan-main);">
-                    <div class="stat-label">Temperature</div>
-                    <div class="stat-subtext">Office Zone</div>
+                    <div class="stat-label">Voltage</div>
+                    <div class="stat-subtext">แรงดันไฟฟ้า (V)</div>
                     <div class="stat-value">
-                        <span id="stat-temp">23.4</span>
-                        <span class="stat-unit">°C</span>
+                        <span id="stat-voltage">220.5</span>
+                        <span class="stat-unit">V</span>
                     </div>
                 </div>
 
-                <!-- Humidity Card -->
-                <div class="stat-card" style="--accent-color: var(--blue-main);">
-                    <div class="stat-label">Humidity</div>
-                    <div class="stat-subtext">Office Zone</div>
+                <!-- Current (A) Card -->
+                <div class="stat-card" style="--accent-color: var(--magenta-main);">
+                    <div class="stat-label">Current</div>
+                    <div class="stat-subtext">กระแสไฟฟ้า (A)</div>
                     <div class="stat-value">
-                        <span id="stat-humidity">61.1</span>
-                        <span class="stat-unit">%RH</span>
+                        <span id="stat-current">1.25</span>
+                        <span class="stat-unit">A</span>
                     </div>
                 </div>
 
@@ -889,10 +889,12 @@
             const co2 = (kwh * 0.4999).toFixed(1);
 
             // Update Cards
-            document.getElementById('stat-kwh').innerText = kwh.toFixed(1);
-            document.getElementById('stat-co2').innerText = co2;
-            document.getElementById('voltage-live').innerText = `${v.toFixed(1)} V`;
-            document.getElementById('current-live').innerText = `${i.toFixed(2)} A`;
+            if (document.getElementById('stat-kwh')) document.getElementById('stat-kwh').innerText = kwh.toFixed(1);
+            if (document.getElementById('stat-power')) document.getElementById('stat-power').innerText = p.toFixed(1);
+            if (document.getElementById('stat-voltage')) document.getElementById('stat-voltage').innerText = v.toFixed(1);
+            if (document.getElementById('stat-current')) document.getElementById('stat-current').innerText = i.toFixed(2);
+            if (document.getElementById('voltage-live')) document.getElementById('voltage-live').innerText = `${v.toFixed(1)} V`;
+            if (document.getElementById('current-live')) document.getElementById('current-live').innerText = `${i.toFixed(2)} A`;
 
             // Power Factor
             let pf = 0.95;

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: meter-digital
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SSL_ENABLED
+        value: false

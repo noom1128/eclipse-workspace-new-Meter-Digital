@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>?? Remote Meter Reader & Scanner Tool - AnyDesk/TeamViewer Modbus Debugger</title>
+    <title>üî¨ Remote Meter Reader & Scanner Tool - AnyDesk/TeamViewer Modbus Debugger</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -238,33 +238,33 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>?? Remote Meter Reader & Scanner Tool</h1>
+                <h1>üî¨ Remote Meter Reader & Scanner Tool</h1>
                 <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">
-                    ‡§√◊ËÕß¡◊Õ ”À√—∫™Ë“ß/ºŸÈ¥Ÿ·≈ Remote (AnyDesk / TeamViewer) ‡¢È“‡§√◊ËÕß≈Ÿ°§È“ ‡æ◊ËÕ∑¥ Õ∫ÕË“π§Ë“ Hex,  ·°π Slave ID ·≈–®—∫§ŸË Register Map ¡‘‡µÕ√Ï√ÿËπ„À¡ËÊ
+                    ‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡∏°‡∏∑‡∏≠‡∏™‡∏≥‡∏´‡∏£‡∏±‡∏ö‡∏ä‡πà‡∏≤‡∏á‡πÄ‡∏ó‡∏Ñ‡∏ô‡∏¥‡∏Ñ Remote (AnyDesk / TeamViewer) ‡πÄ‡∏û‡∏∑‡πà‡∏≠‡∏ó‡∏î‡∏™‡∏≠‡∏ö‡∏≠‡πà‡∏≤‡∏ô‡∏Ñ‡πà‡∏≤ Raw Hex, ‡∏™‡πÅ‡∏Å‡∏ô Slave ID ‡πÅ‡∏•‡∏∞‡∏à‡∏±‡∏ö‡∏Ñ‡∏π‡πà Register Map ‡∏Ç‡∏≠‡∏á‡∏°‡∏¥‡πÄ‡∏ï‡∏≠‡∏£‡πå
                 </p>
             </div>
             <div class="nav-links">
-                <a href="/" class="btn-link">?? ÀπÈ“À≈—° Dashboard</a>
-                <a href="/meter-gateway-setup" class="btn-link">?? µ—Èß§Ë“ Gateway</a>
+                <a href="/" class="btn-link">üè† ‡∏´‡∏ô‡πâ‡∏≤‡∏´‡∏•‡∏±‡∏Å Dashboard</a>
+                <a href="/meter-gateway-setup" class="btn-link">‚öôÔ∏è ‡∏ï‡∏±‡πâ‡∏á‡∏Ñ‡πà‡∏≤ Gateway</a>
             </div>
         </div>
 
         <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('inspector')">?? Raw Hex & Matrix Inspector</button>
-            <button class="tab-btn" onclick="switchTab('scanner')">?? Slave ID Bus Scanner</button>
-            <button class="tab-btn" onclick="switchTab('profiles')">??? Dynamic Protocol Profiles</button>
+            <button class="tab-btn active" onclick="switchTab('inspector')">üì° Raw Hex & Matrix Inspector</button>
+            <button class="tab-btn" onclick="switchTab('scanner')">üîç Slave ID Bus Scanner</button>
+            <button class="tab-btn" onclick="switchTab('profiles')">üìã Dynamic Protocol Profiles</button>
         </div>
 
         <!-- TAB 1: Raw Hex & Matrix Inspector -->
         <div id="inspector" class="panel active">
             <div class="card">
-                <div class="card-title">?? æ“√“¡‘‡µÕ√Ï°“√ÕË“π§Ë“ (Modbus Connection Settings)</div>
+                <div class="card-title">üîå ‡∏ï‡∏±‡πâ‡∏á‡∏Ñ‡πà‡∏≤‡∏Å‡∏≤‡∏£‡πÄ‡∏ä‡∏∑‡πà‡∏≠‡∏°‡∏ï‡πà‡∏≠ (Modbus Connection Settings)</div>
                 <div class="preset-bar">
-                    <span style="font-size:0.8rem; font-weight:700; color:#00f2fe; align-self:center;">? Quick Presets:</span>
+                    <span style="font-size:0.8rem; font-weight:700; color:#00f2fe; align-self:center;">‚ö° Quick Presets:</span>
                     <button class="btn-preset" onclick="setConnectionPreset('169.254.51.66', 31, 1)">MOXA Port 31 (P1)</button>
                     <button class="btn-preset" onclick="setConnectionPreset('169.254.51.66', 32, 1)">MOXA Port 32 (P2)</button>
                     <button class="btn-preset" onclick="setConnectionPreset('192.168.1.200', 502, 1)">Modbus TCP (Port 502)</button>
-                    <button class="btn-preset" onclick="setConnectionPreset('127.0.0.1', 10502, 1)">?? Virtual Simulator (127.0.0.1:10502)</button>
+                    <button class="btn-preset" onclick="setConnectionPreset('127.0.0.1', 10502, 1)">üíª Virtual Simulator (127.0.0.1:10502)</button>
                 </div>
 
                 <div class="form-grid">
@@ -298,26 +298,26 @@
                     <div class="form-group">
                         <label>Protocol Mode</label>
                         <select id="inspProtocolMode">
-                            <option value="AUTO" selected>?? AUTO (RTU over TCP / TCP)</option>
-                            <option value="MODBUS_RTU_OVER_TCP">?? Modbus RTU over TCP</option>
-                            <option value="MODBUS_TCP">?? Modbus TCP Standard</option>
+                            <option value="AUTO" selected>‚ö° AUTO (RTU over TCP / TCP)</option>
+                            <option value="MODBUS_RTU_OVER_TCP">üîÑ Modbus RTU over TCP</option>
+                            <option value="MODBUS_TCP">üåê Modbus TCP Standard</option>
                         </select>
                     </div>
                 </div>
 
                 <button class="btn-action" onclick="executeRawRead()">
                     <span id="inspLoader" class="loader"></span>
-                    ? ÕË“π§Ë“ Raw Hex & Decode Matrix
+                    üöÄ ‡∏≠‡πà‡∏≤‡∏ô‡∏Ñ‡πà‡∏≤ Raw Hex & Decode Matrix
                 </button>
             </div>
 
             <div id="inspResultBox" style="display:none;">
                 <div class="card">
-                    <div class="card-title">?? º≈≈—æ∏Ï Raw Hex Bytes Response</div>
+                    <div class="card-title">üì¶ ‡∏ú‡∏•‡∏•‡∏±‡∏û‡∏ò‡πå Raw Hex Bytes Response</div>
                     <div id="rawHexDump" class="hex-box"></div>
                     <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;" id="inspMeta"></div>
 
-                    <div class="card-title" style="margin-top:20px;">?? Matrix Decoder Table (‡∑’¬∫ Data Types ∑ÿ°√Ÿª·∫∫)</div>
+                    <div class="card-title" style="margin-top:20px;">üìä Matrix Decoder Table (‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö Data Types ‡∏ó‡∏∏‡∏Å‡∏£‡∏π‡∏õ‡πÅ‡∏ö‡∏ö)</div>
                     <div style="overflow-x:auto;">
                         <table>
                             <thead>
@@ -344,7 +344,7 @@
         <!-- TAB 2: Slave ID Bus Scanner -->
         <div id="scanner" class="panel">
             <div class="card">
-                <div class="card-title">??  ·°πÀ“ Slave ID ∑—ÈßÀ¡¥„π “¬ RS485 Bus</div>
+                <div class="card-title">üîç ‡∏™‡πÅ‡∏Å‡∏ô‡∏Ñ‡πâ‡∏ô‡∏´‡∏≤ Slave ID ‡∏ö‡∏ô‡∏™‡∏≤‡∏¢ RS485 Bus</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>IP Address</label>
@@ -373,18 +373,18 @@
                 </div>
                 <button class="btn-action" onclick="executeSlaveScan()">
                     <span id="scanLoader" class="loader"></span>
-                    ?? ‡√‘Ë¡ ·°πÀ“¡‘‡µÕ√Ï„π “¬ RS485
+                    üîç ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏™‡πÅ‡∏Å‡∏ô‡∏´‡∏≤‡∏°‡∏¥‡πÄ‡∏ï‡∏≠‡∏£‡πå‡∏ö‡∏ô RS485
                 </button>
             </div>
 
             <div id="scanResultCard" class="card" style="display:none;">
-                <div class="card-title">º≈°“√ ·°π Slave ID (Scan Summary)</div>
+                <div class="card-title">üìã ‡∏™‡∏£‡∏∏‡∏õ‡∏ú‡∏•‡∏Å‡∏≤‡∏£‡∏™‡πÅ‡∏Å‡∏ô Slave ID (Scan Summary)</div>
                 <div id="scanSummaryText" style="margin-bottom:15px; font-weight:600; color:#34d399;"></div>
                 <table>
                     <thead>
                         <tr>
                             <th>Slave ID</th>
-                            <th> ∂“π–</th>
+                            <th>‡∏™‡∏ñ‡∏≤‡∏ô‡∏∞</th>
                             <th>Response Time</th>
                             <th>Protocol Used</th>
                             <th>Sample Hex</th>
@@ -398,20 +398,20 @@
         <!-- TAB 3: Dynamic Protocol Profile Manager -->
         <div id="profiles" class="panel">
             <div class="card">
-                <div class="card-title">??? √“¬°“√ Modbus Register Profiles „π√–∫∫</div>
+                <div class="card-title">üìã ‡∏£‡∏≤‡∏¢‡∏Å‡∏≤‡∏£ Modbus Register Profiles ‡πÉ‡∏ô‡∏£‡∏∞‡∏ö‡∏ö</div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:var(--text-muted); font-size:0.9rem;">‰ø≈Ï JSON ‡°Á∫Õ¬ŸË∑’Ë ./config/modbus-profiles/  “¡“√∂‡æ‘Ë¡¬’ËÀÈÕ„À¡Ë‰¥È‚¥¬‰¡ËµÈÕß§Õ¡‰æ≈Ï„À¡Ë</span>
-                    <button class="btn-action" style="padding:8px 16px; font-size:0.85rem;" onclick="openNewProfileModal()">?  √È“ß Profile ¬’ËÀÈÕ„À¡Ë</button>
+                    <span style="color:var(--text-muted); font-size:0.9rem;">‡πÑ‡∏ü‡∏•‡πå JSON ‡πÉ‡∏ô‡πÇ‡∏ü‡∏•‡πÄ‡∏î‡∏≠‡∏£‡πå ./config/modbus-profiles/ ‡∏™‡∏≤‡∏°‡∏≤‡∏£‡∏ñ‡πÄ‡∏û‡∏¥‡πà‡∏°‡πÄ‡∏≠‡∏á‡πÑ‡∏î‡πâ</span>
+                    <button class="btn-action" style="padding:8px 16px; font-size:0.85rem;" onclick="openNewProfileModal()">‚ûï ‡∏™‡∏£‡πâ‡∏≤‡∏á Profile ‡πÉ‡∏´‡∏°‡πà</button>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Model Key</th>
-                            <th>¬’ËÀÈÕ (Brand)</th>
-                            <th>™◊ËÕ√ÿËπ (Model Name)</th>
+                            <th>‡∏¢‡∏µ‡πà‡∏´‡πâ‡∏≠ (Brand)</th>
+                            <th>‡∏ä‡∏∑‡πà‡∏≠‡∏£‡∏∏‡πà‡∏ô (Model Name)</th>
                             <th>Function Code</th>
-                            <th>ª√–‡¿∑ Profile</th>
-                            <th>°“√®—¥°“√</th>
+                            <th>‡∏õ‡∏£‡∏∞‡πÄ‡∏†‡∏ó Profile</th>
+                            <th>‡∏Å‡∏≤‡∏£‡∏à‡∏±‡∏î‡∏Å‡∏≤‡∏£</th>
                         </tr>
                     </thead>
                     <tbody id="profileTableBody"></tbody>
@@ -488,7 +488,7 @@
                         });
                     }
                 } else {
-                    alert('? ‰¡Ë “¡“√∂ÕË“π§Ë“‰¥È: ' + (data.message || 'Connection Timeout'));
+                    alert('‚ùå ‡πÑ‡∏°‡πà‡∏™‡∏≤‡∏°‡∏≤‡∏£‡∏ñ‡∏≠‡πà‡∏≤‡∏ô‡∏Ñ‡πà‡∏≤‡πÑ‡∏î‡πâ: ' + (data.message || 'Connection Timeout'));
                 }
             } catch (err) {
                 loader.style.display = 'none';
@@ -518,7 +518,7 @@
                 loader.style.display = 'none';
 
                 document.getElementById('scanResultCard').style.display = 'block';
-                document.getElementById('scanSummaryText').textContent = `æ∫¡‘‡µÕ√Ï∑—ÈßÀ¡¥ ${data.foundCount} ‡§√◊ËÕß ®“°∑’Ë ·°π ${data.scannedCount} ‡§√◊ËÕß („™È‡«≈“ ${data.totalTimeMs} ms)`;
+                document.getElementById('scanSummaryText').textContent = `‡∏û‡∏ö ${data.foundCount} ‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á ‡∏à‡∏≤‡∏Å‡∏Å‡∏≤‡∏£‡∏™‡πÅ‡∏Å‡∏ô‡∏ó‡∏±‡πâ‡∏á‡∏´‡∏°‡∏î ${data.scannedCount} ‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á (‡πÉ‡∏ä‡πâ‡πÄ‡∏ß‡∏•‡∏≤ ${data.totalTimeMs} ms)`;
 
                 const tbody = document.getElementById('slaveTableBody');
                 tbody.innerHTML = '';
@@ -535,7 +535,7 @@
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">‰¡Ëæ∫ Slave ID ∑’ËµÕ∫ πÕß„π “¬ RS485 π’È</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan=\"5\" style=\"text-align:center; color:var(--text-muted);\">‡πÑ‡∏°‡πà‡∏û‡∏ö Slave ID ‡∏ó‡∏µ‡πà‡∏ï‡∏≠‡∏ö‡∏™‡∏ô‡∏≠‡∏á‡∏ö‡∏ô‡∏™‡∏≤‡∏¢ RS485 ‡∏ô‡∏µ‡πâ</td></tr>';
                 }
             } catch (err) {
                 loader.style.display = 'none';
@@ -557,9 +557,9 @@
                         <td>${p.brand || '-'}</td>
                         <td>${p.modelName || '-'}</td>
                         <td>Function Code ${p.defaultFunctionCode}</td>
-                        <td>${p.builtIn ? '?? Built-in' : '?? Custom JSON'}</td>
+                        <td>${p.builtIn ? 'üîí Built-in' : 'üìù Custom JSON'}</td>
                         <td>
-                            <button style="background:rgba(0,242,254,0.15); border:1px solid #00f2fe; color:#00f2fe; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="viewProfileJson('${p.modelKey}')">??? ¥Ÿ JSON Mapping</button>
+                            <button style="background:rgba(0,242,254,0.15); border:1px solid #00f2fe; color:#00f2fe; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="viewProfileJson('${p.modelKey}')">üëÅÔ∏è ‡∏î‡∏π JSON Mapping</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -575,11 +575,11 @@
             alert(JSON.stringify(data, null, 2));
         }
 
-        function openNewProfileModal() {
-            const key = prompt('°√Õ° Model Key ¬’ËÀÈÕ„À¡Ë (‡™Ëπ EASTRON_SDM230):');
+                    <button class="btn-action" style="padding:8px 16px; font-size:0.85rem;" onclick="openNewProfileModal()">‚ûï ‡∏™‡∏£‡πâ‡∏≤‡∏á Profile ‡πÉ‡∏´‡∏°‡πà</button>
+            const key = prompt('‡∏Å‡∏£‡∏≠‡∏Å Model Key ‡∏Ç‡∏≠‡∏á‡∏°‡∏¥‡πÄ‡∏ï‡∏≠‡∏£‡πå (‡πÄ‡∏ä‡πà‡∏ô EASTRON_SDM230):');
             if (!key) return;
-            const brand = prompt('°√Õ°™◊ËÕ¬’ËÀÈÕ (‡™Ëπ Eastron):');
-            const name = prompt('°√Õ°™◊ËÕ√ÿËπ (‡™Ëπ SDM230 Single Phase):');
+            const brand = prompt('‡∏Å‡∏£‡∏≠‡∏Å‡∏¢‡∏µ‡πà‡∏´‡πâ‡∏≠‡∏°‡∏¥‡πÄ‡∏ï‡∏≠‡∏£‡πå (‡πÄ‡∏ä‡πà‡∏ô Eastron):');
+            const name = prompt('‡∏Å‡∏£‡∏≠‡∏Å‡∏ä‡∏∑‡πà‡∏≠‡∏£‡∏∏‡πà‡∏ô‡∏°‡∏¥‡πÄ‡∏ï‡∏≠‡∏£‡πå (‡πÄ‡∏ä‡πà‡∏ô SDM230 Single Phase):');
 
             const profile = {
                 modelKey: key.trim().toUpperCase(),
@@ -601,7 +601,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(profile)
             }).then(r => r.json()).then(saved => {
-                alert('∫—π∑÷° Profile JSON ‡√’¬∫√ÈÕ¬·≈È«!');
+                alert('‡∏ö‡∏±‡∏ô‡∏ó‡∏∂‡∏Å Profile JSON ‡πÄ‡∏£‡∏µ‡∏¢‡∏ö‡∏£‡πâ‡∏≠‡∏¢‡πÅ‡∏•‡πâ‡∏ß!');
                 loadProfilesList();
             });
         }

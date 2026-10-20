@@ -39,7 +39,7 @@ public class SecurityConfig {
 
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/settings/promptpay-qr", "/api/settings/property-profile").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meter", "/api/meter/ocr-scan", "/api/meter/ocr-scan-cloud", "/api/meter/submit-photo", "/api/meter/approve-pending/**", "/api/meter/line/**", "/api/line/**").permitAll()
-            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/meter", "/api/meter/latest", "/api/meter/network-mode", "/api/meter/pending-photos", "/api/meter/history", "/api/meter/check-anomaly").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/meter", "/api/meter/latest", "/api/meter/latest-by-room", "/api/meter/network-mode", "/api/meter/pending-photos", "/api/meter/history", "/api/meter/check-anomaly").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rooms/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/rooms/**").hasRole("ADMIN")
             .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/rooms/**").hasRole("ADMIN")
@@ -47,7 +47,6 @@ public class SecurityConfig {
             .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/meter/**").hasRole("ADMIN")
             .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/meter/**").hasRole("ADMIN")
             .requestMatchers("/api/billing/**").hasRole("ADMIN")
-            .requestMatchers("/api/meter/latest-by-room").hasRole("ADMIN")
             .anyRequest().authenticated()
         )
         .formLogin(form -> form.disable())
