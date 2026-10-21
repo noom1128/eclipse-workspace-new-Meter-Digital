@@ -24,7 +24,14 @@ echo.
 
 where java >nul 2>nul
 if %errorlevel% equ 0 (
-    java -jar target/meter-digital-0.0.1-SNAPSHOT.jar
+    if exist "meter-digital.jar" (
+        java -jar meter-digital.jar
+    ) else if exist "target\meter-digital-0.0.1-SNAPSHOT.jar" (
+        java -jar target\meter-digital-0.0.1-SNAPSHOT.jar
+    ) else (
+        echo [ERROR] Application JAR file not found.
+        pause
+    )
 ) else (
     echo [*] Java runtime not in PATH, launching via Maven Wrapper...
     call .\mvnw.cmd spring-boot:run

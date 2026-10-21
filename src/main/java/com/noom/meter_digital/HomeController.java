@@ -52,9 +52,9 @@ public class HomeController {
         return "<h1>Meter Digital Pro Download Center</h1>";
     }
 
-    @GetMapping(value = "/api/download/setup-exe", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/api/download/setup-exe")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<byte[]> downloadSetupExe() {
+    public org.springframework.http.ResponseEntity<?> downloadSetupExe() {
         try {
             java.io.File file = new java.io.File("dist/MeterDigitalPro-Setup.zip");
             if (!file.exists()) {
@@ -63,17 +63,23 @@ public class HomeController {
             if (!file.exists()) {
                 file = new java.io.File("target/meter-digital-0.0.1-SNAPSHOT.jar");
             }
-            if (!file.exists()) {
-                return org.springframework.http.ResponseEntity.notFound().build();
+            if (file.exists()) {
+                byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
+                String filename = file.getName();
+                return org.springframework.http.ResponseEntity.ok()
+                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + filename + "\"")
+                        .body(bytes);
             }
-            byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
-            String filename = file.getName();
-            return org.springframework.http.ResponseEntity.ok()
-                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + filename + "\"")
-                    .body(bytes);
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                    .header(org.springframework.http.HttpHeaders.LOCATION,
+                            "https://drive.google.com/drive/folders/1yWpOXLZ4450-PE86w7boLAi1wDmqDcdA?usp=sharing")
+                    .build();
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().build();
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                    .header(org.springframework.http.HttpHeaders.LOCATION,
+                            "https://drive.google.com/drive/folders/1yWpOXLZ4450-PE86w7boLAi1wDmqDcdA?usp=sharing")
+                    .build();
         }
     }
 
